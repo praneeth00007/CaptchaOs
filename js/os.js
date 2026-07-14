@@ -360,7 +360,7 @@
         "\n  ?q=term    (open browser + search)" +
         "\n  ?snake=2   (start Snake at level N: 2=glitch storm, 3=near finale)" +
         "\n  ?finale=1  (jump straight to the rickroll finale)" +
-        "\n  ?audiocheck=1 (pop the Audio Activity Check now)" +
+        "\n  ?audiocheck=1 (pop the Alive Test takeover now)" +
         "\n  ?idle=fast    (short idle timers: 1.5s fade, 20s check)" +
         "\n  ?spud=0|1|2|3 (preview Spud's mood: friendly→observant→suspicious→predictive)");
     } catch (e) {}

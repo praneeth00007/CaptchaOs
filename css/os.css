@@ -847,11 +847,57 @@ body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 .appwin .body { background:#fff; }
 
 /* ============================================================
-   Audio Activity Check — the "are you still there?" captcha.
+   Alive Test — the full-screen "are you still there?" takeover.
+   Blanks the whole OS, looms a giant Spud behind a lone panel.
    Signature: a live PRESENCE scope that jumps with your motion,
    the same energy that gates the music.
    ============================================================ */
-.aac-win .body { background:#161a22; }
+#aac-overlay {
+  position:absolute; inset:0; z-index:10000; overflow:hidden;
+  background: radial-gradient(120% 100% at 50% 26%, #17131f 0%, #06050b 100%);
+  animation: aac-fade .35s ease-out;
+}
+@keyframes aac-fade { from { opacity:0; } to { opacity:1; } }
+
+/* Spud, enormous, leaning in from the top with his face in full view and
+   his eyes cast down at the little screen below. */
+.aac-bg { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.aac-bg .spud-guy {
+  position:absolute; left:18%; top:-2%; bottom:auto; cursor:default;
+  transform: translateX(-50%) scale(15);
+  transform-origin: top center;
+  opacity:.96;
+  animation: aac-loom 5s ease-in-out infinite;
+}
+/* the giant eyes track the cursor (driven from presence.js) */
+@keyframes aac-loom {
+  0%,100% { transform: translateX(-50%) scale(15); }
+  50%     { transform: translateX(-50%) scale(15) translateY(-.5px); }
+}
+
+/* the little screen he's watching — small, over on the right */
+.aac-panel {
+  position:absolute; right:5vw; top:50%; left:auto; bottom:auto;
+  transform:translateY(-50%);
+  z-index:2; width:272px; max-width:86vw;
+  background: var(--chrome); border:2px solid var(--chrome-darker);
+  box-shadow:
+    inset 2px 2px 0 0 var(--chrome-light),
+    inset -2px -2px 0 0 var(--chrome-dark),
+    0 16px 50px rgba(0,0,0,.8);
+  animation: aac-pop .32s ease-out;
+}
+@keyframes aac-pop {
+  from { opacity:0; transform:translateY(-50%) translateX(18px); }
+  to   { opacity:1; transform:translateY(-50%) translateX(0); }
+}
+.aac-titlebar {
+  height:28px; display:flex; align-items:center; gap:8px; padding:0 8px;
+  background: linear-gradient(90deg,#1c2028,#2a3140); color:#dfe7ff;
+  font-family:var(--font-pixel); font-size:11px; letter-spacing:.5px;
+}
+.aac-titlebar .tico { font-size:14px; }
+.aac-panel .body { background:#161a22; }
 .aac { font-family: var(--font-body); color:#dfe7ff; }
 
 /* --- the presence scope / VU meter --- */

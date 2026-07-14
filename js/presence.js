@@ -109,11 +109,48 @@
         '<div class="aac-status">Awaiting a sign of life…</div>' +
       '</div>';
 
-    const win = WM.open({
-      title: "Audio Activity Check", icon: "🎧", width: 384,
-      content: host, resizable: false, buttons: false, silent: true,
-      className: "appwin aac-win"
-    });
+    // Full-screen takeover: black out the whole OS, loom a giant Spud behind,
+    // and show only this panel. Nothing else is reachable until it's passed.
+    const overlay = document.createElement("div");
+    overlay.id = "aac-overlay";
+
+    const bg = document.createElement("div");
+    bg.className = "aac-bg";
+    const src = document.querySelector("#spud .spud-guy");
+    if (src) {
+      const clone = src.cloneNode(true);
+      clone.removeAttribute("tabindex");
+      clone.classList.remove("talking", "sipping");
+      const ce = clone.querySelector(".spud-eyes"); if (ce) ce.classList.remove("blink");
+      clone.querySelectorAll(".eye b").forEach((b) => { b.style.transform = ""; });
+      bg.appendChild(clone);
+    }
+    overlay.appendChild(bg);
+
+    const panel = document.createElement("div");
+    panel.className = "aac-panel";
+    panel.innerHTML =
+      '<div class="aac-titlebar"><span class="tico">🫀</span><span>Alive Test</span></div>' +
+      '<div class="body"></div>';
+    panel.querySelector(".body").appendChild(host);
+    overlay.appendChild(panel);
+
+    (document.getElementById("screen") || document.body).appendChild(overlay);
+
+    // the giant Spud's eyes follow your cursor, exactly like the taskbar one
+    const bigEyes = overlay.querySelectorAll(".aac-bg .spud-eyes .eye");
+    bigEyes.forEach((e) => { const b = e.querySelector("b"); if (b) b.style.animation = "none"; });
+    function trackBig(e) {
+      bigEyes.forEach((eye) => {
+        const b = eye.querySelector("b"); if (!b) return;
+        const r = eye.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        const a = Math.atan2(dy, dx), mag = Math.min(2, Math.hypot(dx, dy) / 260);
+        b.style.transform = "translate(" + (Math.cos(a) * mag).toFixed(2) + "px," +
+                            (Math.sin(a) * mag).toFixed(2) + "px)";
+      });
+    }
+    window.addEventListener("mousemove", trackBig, { passive: true });
 
     const barsEl   = host.querySelector(".aac-bars");
     const scoreEl  = host.querySelector(".aac-score");
@@ -281,6 +318,7 @@
     }
     function finish() {
       cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", trackBig);
       checkOpen = false;
       lastMove = now(); idleAccum = 0; musicOn = true;
       try { Sound.levelup(); } catch (e) {}
@@ -290,7 +328,7 @@
       status.textContent = "Audio restored.";
       status.className = "aac-status ok";
       stage.innerHTML = '<div class="aac-done">✓</div>';
-      setTimeout(() => { try { win.close(); } catch (e) {} }, 1500);
+      setTimeout(() => { try { overlay.remove(); } catch (e) {} }, 1500);
     }
     runTask();
   }

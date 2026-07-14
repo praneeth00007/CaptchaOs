@@ -252,7 +252,7 @@
   function speak(line, opts) {
     opts = opts || {};
     if (!line || typing) return false;
-    if (document.querySelector(".aac-win")) return false;   // never talk over the check
+    if (document.getElementById("aac-overlay")) return false;   // never talk over the Alive Test
     const gap = opts.minGap != null ? opts.minGap : GAP[tier()] + rnd(-1500, 3000);
     if (now() - lastSpoke < gap) return false;
     if (opts.prob != null && Math.random() > opts.prob) return false;
