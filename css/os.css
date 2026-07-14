@@ -1,0 +1,824 @@
+/* ============================================================
+   CaptchaOS — cozy Win98 that slowly betrays you
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&display=swap');
+
+:root {
+  --desktop:      #7ba6a1;   /* cozy sage-teal wallpaper base */
+  --desktop-2:    #5f8b86;   /* dither shade */
+  --chrome:       #eae3d2;   /* warm beige window body */
+  --chrome-dark:  #b8ae97;   /* bevel shadow */
+  --chrome-darker:#8c8674;   /* deep bevel / outline */
+  --chrome-light: #fffdf5;   /* bevel highlight */
+  --ink:          #2b2620;   /* warm near-black */
+  --ink-soft:     #5c5548;
+  --title:        #3a2e7a;   /* periwinkle active title bar */
+  --title-2:      #6a5bc4;
+  --title-inactive:#9a938a;
+  --accent:       #d9536a;   /* raspberry selection / danger */
+  --accent-soft:  #f2c4cc;
+  --link:         #2f4fd9;
+  --error:        #c62828;
+  --ok:           #3a8a4a;
+
+  --px:  2px;                 /* base pixel unit */
+  --font-pixel: 'Silkscreen', monospace;
+  --font-logo:  'Press Start 2P', monospace;
+  --font-body:  'VT323', 'Silkscreen', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: var(--font-body);
+  color: var(--ink);
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+  image-rendering: pixelated;
+  cursor: default;
+  user-select: none;
+}
+
+img { image-rendering: pixelated; }
+
+/* Crisp retro cursor */
+body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2 L2 18 L6 14 L9 21 L12 20 L9 13 L15 13 Z' fill='white' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E") 2 2, auto; }
+
+/* ============================================================
+   Bevel primitives — the language of the whole OS chrome
+   ============================================================ */
+.bevel-out {
+  border: var(--px) solid var(--chrome-darker);
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--chrome-light),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--chrome-dark);
+  background: var(--chrome);
+}
+.bevel-in {
+  border: var(--px) solid var(--chrome-darker);
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--chrome-dark),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--chrome-light);
+  background: #fff;
+}
+
+/* ============================================================
+   Screen + boot
+   ============================================================ */
+#screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+#boot {
+  position: absolute;
+  inset: 0;
+  background: #0a0a12;
+  color: #cfe;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  z-index: 9000;
+  font-family: var(--font-body);
+  font-size: 22px;
+}
+#boot .logo {
+  font-family: var(--font-logo);
+  font-size: 26px;
+  color: #ffe9a8;
+  text-shadow: 3px 3px 0 #b5451f;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  text-align: center;
+}
+#boot .tagline { color:#7fd7c8; font-size:20px; }
+#boot .barwrap { width: 320px; }
+#boot .bar {
+  height: 22px;
+  background: #12121e;
+  border: 2px solid #2b2b40;
+}
+#boot .bar > i {
+  display:block; height:100%; width:0%;
+  background: repeating-linear-gradient(90deg,#3ad0b0 0 10px,#2ba48c 10px 14px);
+  transition: width .12s linear;
+}
+#boot .blink { animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ============================================================
+   Login / lock screen
+   ============================================================ */
+#login {
+  position:absolute; inset:0; z-index:8000;
+  display:block; overflow-y:auto; overflow-x:hidden;
+  padding: 20px 10px; text-align:center;
+  background:
+    radial-gradient(120% 80% at 50% 118%, rgba(255,168,96,.20) 0%, transparent 55%),
+    radial-gradient(120% 90% at 50% 12%, #1e1c48 0%, #171638 42%, #0e1030 100%);
+}
+#login::before {
+  /* dither texture */
+  content:""; position:absolute; inset:0; opacity:.25; pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.15) 75%),
+    linear-gradient(45deg,rgba(0,0,0,.08) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.08) 75%);
+  background-size: 6px 6px; background-position:0 0,3px 3px;
+}
+.login-card {
+  position:relative; width: min(420px, 92vw); padding: 0;
+  display:inline-block; text-align:left; vertical-align:top;
+  /* block-flow scroll container (#login) => a plain, reliable scrollbar */
+}
+.login-card .head {
+  padding: 22px 20px 16px;
+  text-align:center;
+}
+.login-card h1 {
+  font-family: var(--font-logo);
+  font-size: 20px; color: var(--title);
+  text-shadow: 2px 2px 0 var(--chrome-light);
+  line-height:1.5;
+}
+.login-card .sub { font-size: 20px; color: var(--ink-soft); margin-top:10px; }
+.login-body { padding: 0 20px 22px; }
+.field { margin-bottom: 12px; }
+.field label { display:block; font-family:var(--font-pixel); font-size:11px; margin-bottom:6px; color:var(--ink-soft);}
+.field input {
+  width:100%; font-family:var(--font-body); font-size:22px; padding:6px 8px;
+  outline:none;
+}
+.login-hint { font-size:18px; color:var(--ink-soft); text-align:center; margin-top:10px; min-height:22px;}
+.login-hint.bad { color: var(--error); }
+.login-hint.good { color: var(--ok); }
+
+/* ============================================================
+   Desktop — cozy nighttime scene
+   ============================================================ */
+#desktop {
+  position:absolute; inset:0 0 40px 0; z-index:10;
+  background:
+    /* warm dusk glow hugging the horizon */
+    radial-gradient(120% 70% at 74% 118%, rgba(255,168,96,.28) 0%, transparent 52%),
+    /* deep, calm night sky */
+    linear-gradient(180deg, #0e1030 0%, #171638 42%, #241f4c 68%, #33284a 84%, #3f2d42 100%);
+  overflow:hidden;
+  transition: background 1.2s ease;
+}
+/* soft pixel dither, dark & subtle so the night reads calm */
+#desktop::before {
+  content:""; position:absolute; inset:0; opacity:.12; pointer-events:none; z-index:1;
+  background-image:
+    linear-gradient(45deg,rgba(255,255,255,.10) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.10) 75%),
+    linear-gradient(45deg,rgba(0,0,0,.14) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.14) 75%);
+  background-size: 8px 8px; background-position:0 0,4px 4px;
+}
+/* faint vignette to make the scene feel enclosed & safe */
+.night-sky {
+  position:absolute; inset:0; pointer-events:none; z-index:1;
+  background: radial-gradient(120% 100% at 50% 40%, transparent 55%, rgba(6,6,20,.45) 100%);
+}
+
+/* --- moon (replaces the daytime sun) --- */
+#desktop .moon {
+  position:absolute; top:40px; right:64px; width:58px; height:58px; z-index:1;
+  background: radial-gradient(circle at 38% 34%, #fff8e6, #f2e6bd 70%, #d9c98f 100%);
+  border-radius:50%; image-rendering:pixelated; pointer-events:none;
+  box-shadow:
+    0 0 0 7px rgba(246,235,196,.10),
+    0 0 0 15px rgba(246,235,196,.05),
+    0 0 40px 10px rgba(255,232,168,.30);
+  animation: moonglow 7s ease-in-out infinite;
+}
+#desktop .moon i, #desktop .moon::before, #desktop .moon::after {
+  content:""; position:absolute; border-radius:50%;
+  background: rgba(190,176,128,.55); box-shadow: inset 1px 1px 0 rgba(120,108,72,.5);
+}
+#desktop .moon::before { width:12px; height:12px; top:14px; left:16px; }
+#desktop .moon::after  { width:8px;  height:8px;  bottom:14px; right:16px; }
+#desktop .moon i       { width:6px;  height:6px;  top:30px; left:34px; }
+@keyframes moonglow {
+  0%,100% { box-shadow: 0 0 0 7px rgba(246,235,196,.10), 0 0 0 15px rgba(246,235,196,.05), 0 0 34px 8px rgba(255,232,168,.24); }
+  50%     { box-shadow: 0 0 0 7px rgba(246,235,196,.14), 0 0 0 15px rgba(246,235,196,.07), 0 0 48px 12px rgba(255,232,168,.38); }
+}
+
+/* --- twinkling pixel stars (populated by os.js) --- */
+#desktop .stars { position:absolute; inset:0 0 34% 0; pointer-events:none; z-index:1; }
+#desktop .stars i {
+  position:absolute; width:2px; height:2px; background:#fffaf0;
+  box-shadow: 0 0 3px 1px rgba(255,250,235,.6);
+  animation: twinkle 3.2s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,100% { opacity:.18; transform:scale(.7); }
+  50%     { opacity:.95; transform:scale(1.15); }
+}
+
+/* --- an occasional shooting star --- */
+#desktop .shooting-star {
+  position:absolute; top:14%; left:-12%; width:90px; height:2px; z-index:1;
+  background: linear-gradient(90deg, transparent, rgba(255,250,235,.95));
+  opacity:0; transform: rotate(14deg);
+  animation: shoot 11s ease-in infinite; animation-delay:4s;
+}
+@keyframes shoot {
+  0%,86%  { opacity:0; transform: translate(0,0) rotate(14deg); }
+  88%     { opacity:.9; }
+  100%    { opacity:0; transform: translate(120vw, 34vh) rotate(14deg); }
+}
+
+/* --- drifting night clouds --- */
+#desktop .clouds { position:absolute; inset:0 0 40% 0; pointer-events:none; overflow:hidden; z-index:1; }
+#desktop .cloud {
+  position:absolute; height:24px; background: rgba(64,62,104,.5);
+  border-radius:999px; filter: blur(1px);
+  animation: drift linear infinite;
+}
+#desktop .cloud::before, #desktop .cloud::after {
+  content:""; position:absolute; background: rgba(64,62,104,.5); border-radius:50%;
+}
+#desktop .cloud::before { width:52%; height:200%; left:16%; top:-90%; }
+#desktop .cloud::after  { width:40%; height:170%; right:14%; top:-60%; }
+#desktop .cloud.c1 { top:17%; width:150px; animation-duration:66s; }
+#desktop .cloud.c2 { top:30%; width:104px; opacity:.8;  animation-duration:84s; animation-delay:-24s; }
+#desktop .cloud.c3 { top:9%;  width:88px;  opacity:.55; animation-duration:98s; animation-delay:-52s; }
+@keyframes drift { from { transform: translateX(-180px); } to { transform: translateX(112vw); } }
+
+/* --- gentle rain (streaks populated by os.js) --- */
+#desktop .rain { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:2; }
+#desktop .rain i {
+  position:absolute; top:-14%; width:1px; height:15px;
+  background: linear-gradient(transparent, rgba(180,202,255,.5));
+  animation: fall linear infinite;
+}
+@keyframes fall { to { transform: translateY(122vh); } }
+
+/* --- cozy hills on the horizon (night-darkened) --- */
+#desktop .hill {
+  position:absolute; bottom:0; left:0; right:0; height:30%; z-index:2;
+  background:
+    radial-gradient(60% 120% at 20% 100%, #241f3c 0 60%, transparent 61%),
+    radial-gradient(60% 120% at 70% 100%, #1b1730 0 60%, transparent 61%);
+  opacity:.92; pointer-events:none;
+}
+
+/* --- warm desk lamp: the heart of the cozy glow --- */
+#desktop .desk-lamp { position:absolute; right:46px; bottom:0; width:120px; height:170px; z-index:3; pointer-events:none; }
+#desktop .lamp-glow {
+  position:absolute; right:-56px; bottom:24px; width:280px; height:280px;
+  background: radial-gradient(circle at 62% 40%,
+              rgba(255,198,116,.42) 0%, rgba(255,172,92,.16) 42%, transparent 70%);
+  animation: lampflicker 5.5s ease-in-out infinite;
+}
+#desktop .lamp-shade {
+  position:absolute; right:36px; bottom:100px; width:58px; height:32px;
+  background: linear-gradient(#ffd591, #e59b45);
+  clip-path: polygon(20% 0,80% 0,100% 100%,0 100%);
+  box-shadow: 0 8px 22px rgba(255,180,90,.5);
+}
+#desktop .lamp-shade::after {                       /* warm bulb lip */
+  content:""; position:absolute; left:0; right:0; bottom:-3px; height:5px;
+  background: #fff2cf; box-shadow: 0 0 12px 4px rgba(255,220,150,.8);
+}
+#desktop .lamp-neck {
+  position:absolute; right:60px; bottom:26px; width:6px; height:78px;
+  background: linear-gradient(90deg,#43331f,#6a5236,#43331f);
+  transform: rotate(-7deg); transform-origin: bottom center; border-radius:2px;
+}
+#desktop .lamp-base {
+  position:absolute; right:40px; bottom:16px; width:48px; height:12px;
+  background: linear-gradient(#5a4629,#3c2d1a); border-radius:44%;
+  box-shadow: 0 2px 0 rgba(0,0,0,.3);
+}
+@keyframes lampflicker {
+  0%,100% { opacity:.92; }
+  45%     { opacity:1; }
+  70%     { opacity:.86; }
+}
+
+.icons { position:absolute; top:14px; left:14px; display:flex; flex-direction:column; gap:14px; z-index:5; }
+.dicon {
+  width: 84px; display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:6px 4px; cursor:pointer; border:2px dotted transparent;
+  transition: background .18s ease, transform .18s ease, border-color .18s ease;
+}
+.dicon:hover { background: rgba(120,104,196,.22); transform: translateY(-1px); }
+.dicon.sel { background: rgba(120,104,196,.4); border-color: rgba(255,240,200,.55); }
+.dicon .glyph {
+  width:44px; height:44px; display:grid; place-items:center; font-size:30px;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.35));
+}
+.dicon .lbl {
+  font-family:var(--font-pixel); font-size:10px; color:#fff; text-align:center;
+  text-shadow: 1px 1px 0 #234, 0 0 2px #000; line-height:1.4;
+}
+
+/* ============================================================
+   Windows
+   ============================================================ */
+.win {
+  position:absolute; min-width:220px; min-height:120px;
+  display:flex; flex-direction:column;
+  z-index:100;
+}
+.win .titlebar {
+  height:26px; display:flex; align-items:center; gap:6px; padding:0 4px 0 6px;
+  background: linear-gradient(90deg, var(--title), var(--title-2));
+  color:#fff; cursor:grab; user-select:none;
+  font-family:var(--font-pixel); font-size:11px;
+}
+.win.inactive .titlebar { background: linear-gradient(90deg,#9a938a,#b7b0a5); }
+.win .titlebar .ttl { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; letter-spacing:.5px;}
+.win .titlebar .tico { font-size:13px; }
+.win .tbtn {
+  width:20px; height:18px; display:grid; place-items:center;
+  font-family:var(--font-pixel); font-size:11px; color:var(--ink);
+  cursor:pointer;
+}
+.win .tbtn:active { box-shadow: inset 2px 2px 0 0 var(--chrome-dark), inset -2px -2px 0 0 var(--chrome-light);}
+.win .body {
+  flex:1; overflow:auto; background: var(--chrome); position:relative;
+  border-top: 2px solid var(--chrome-light);
+}
+.win.dragging { opacity:.96; }
+.win .resize {
+  position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
+  background:
+    linear-gradient(135deg, transparent 40%, var(--chrome-darker) 40% 50%, transparent 50% 60%, var(--chrome-darker) 60% 70%, transparent 70%);
+}
+
+/* generic button */
+.btn {
+  font-family:var(--font-pixel); font-size:11px; color:var(--ink);
+  padding:6px 12px; cursor:pointer; min-width:64px; text-align:center;
+}
+.btn:active { box-shadow: inset 2px 2px 0 0 var(--chrome-dark), inset -2px -2px 0 0 var(--chrome-light);}
+.btn.primary { color:#fff; background: linear-gradient(var(--title-2),var(--title)); }
+.btn.danger  { color:#fff; background: linear-gradient(#e2687d,var(--accent)); }
+.btn:focus-visible { outline: 2px dashed var(--title); outline-offset:2px; }
+
+/* ============================================================
+   Error dialogs — the SIGNATURE element
+   ============================================================ */
+.errbox { min-width: 300px; max-width: 380px; z-index: 500; position:absolute; }
+.errbox .titlebar { background: linear-gradient(90deg,#7a1f1f,#c62828); }
+.errbox .body { padding:16px; }
+.err-row { display:flex; gap:14px; align-items:flex-start; }
+.err-ico {
+  width:36px; height:36px; flex:0 0 36px; display:grid; place-items:center;
+  font-size:26px;
+}
+.err-msg { font-size:20px; line-height:1.25; color:var(--ink); padding-top:2px; }
+.err-code { font-family:var(--font-pixel); font-size:9px; color:var(--ink-soft); margin-top:8px;}
+.err-actions { display:flex; gap:8px; justify-content:center; margin-top:16px; }
+@keyframes errpop { 0%{ transform: scale(.6); opacity:0;} 70%{ transform: scale(1.04);} 100%{ transform: scale(1); opacity:1;} }
+.errbox { animation: errpop .16s ease-out; }
+@keyframes shakeit { 0%,100%{transform:translate(0,0)} 20%{transform:translate(-3px,2px)} 40%{transform:translate(3px,-2px)} 60%{transform:translate(-2px,-2px)} 80%{transform:translate(2px,2px)} }
+.shake { animation: shakeit .3s linear; }
+
+/* ============================================================
+   Taskbar
+   ============================================================ */
+#taskbar {
+  position:absolute; left:0; right:0; bottom:0; height:40px; z-index:6000;
+  display:flex; align-items:center; gap:6px; padding:0 6px;
+}
+#startbtn {
+  height:30px; display:flex; align-items:center; gap:8px; padding:0 12px;
+  font-family:var(--font-pixel); font-size:12px; font-weight:700; cursor:pointer;
+  color:var(--title);
+}
+#startbtn .s { font-size:16px; }
+#startbtn.open { box-shadow: inset 2px 2px 0 0 var(--chrome-dark), inset -2px -2px 0 0 var(--chrome-light);}
+#tasks { flex:1; display:flex; gap:6px; overflow:hidden; height:30px; align-items:center;}
+.taskitem {
+  height:30px; min-width:140px; max-width:200px; display:flex; align-items:center; gap:8px;
+  padding:0 10px; font-family:var(--font-pixel); font-size:10px; cursor:pointer;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+}
+.taskitem.active { box-shadow: inset 2px 2px 0 0 var(--chrome-dark), inset -2px -2px 0 0 var(--chrome-light); background:#ded5c0;}
+#tray {
+  height:30px; display:flex; align-items:center; gap:10px; padding:0 12px;
+  font-family:var(--font-pixel); font-size:11px;
+}
+#clock {
+  min-width:96px; text-align:center;
+  font-family: var(--font-pixel); letter-spacing:1px;
+  color:#ffdca0; text-shadow: 0 0 7px rgba(255,190,110,.65);
+}
+#clock .sec { opacity:.7; }
+
+/* Start menu */
+#startmenu {
+  position:absolute; left:6px; bottom:44px; width:240px; z-index:6100; display:none;
+}
+#startmenu.open { display:block; }
+#startmenu .banner {
+  width:34px; position:absolute; left:0; top:0; bottom:0;
+  background: linear-gradient(var(--title-2),var(--title));
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  color:#fff; font-family:var(--font-logo); font-size:12px; text-align:center;
+  padding:10px 0; letter-spacing:2px;
+}
+#startmenu .items { margin-left:34px; padding:6px; }
+.smitem {
+  display:flex; align-items:center; gap:10px; padding:8px 10px; cursor:pointer;
+  font-family:var(--font-body); font-size:20px; color:var(--ink);
+}
+.smitem:hover { background: linear-gradient(90deg,var(--title),var(--title-2)); color:#fff; }
+.smitem .g { font-size:20px; width:24px; text-align:center; }
+.smsep { height:2px; background:var(--chrome-dark); margin:4px 6px; box-shadow:0 1px 0 var(--chrome-light); }
+
+/* ============================================================
+   Captcha kit
+   ============================================================ */
+.cap { padding:0; width:340px; }
+.cap .banner {
+  background: linear-gradient(180deg,#4a83d6,#2f5fb0); color:#fff; padding:12px 14px;
+}
+.cap .banner .k { font-family:var(--font-pixel); font-size:12px; }
+.cap .banner .q { font-size:22px; margin-top:6px; line-height:1.15; }
+.cap .banner .q b { color:#ffe08a; }
+.cap .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; background:#2f5fb0; padding:3px;}
+.cap .cell {
+  aspect-ratio:1; position:relative; cursor:pointer; overflow:hidden;
+  background:#cfd8e6; display:grid; place-items:center; font-size:34px;
+}
+.cap .cell.sel::after {
+  content:"✔"; position:absolute; top:4px; left:4px; width:22px; height:22px;
+  background:#2f5fb0; color:#fff; display:grid; place-items:center; border-radius:50%;
+  font-size:14px; box-shadow:0 0 0 3px #fff;
+}
+.cap .foot { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#fff;}
+.cap .foot .robo { display:flex; gap:8px; align-items:center; font-size:12px; color:#5c5548; font-family:var(--font-pixel);}
+.cap .refresh { cursor:pointer; font-size:20px; }
+.cap-msg { font-size:18px; padding:6px 12px; min-height:26px; }
+.cap-msg.bad { color:var(--error); } .cap-msg.good { color:var(--ok); }
+.cap-counter { font-family:var(--font-pixel); font-size:9px; color:#5c5548; padding:0 12px 8px; }
+
+/* checkbox captcha */
+.cbx-wrap { padding:20px; display:flex; align-items:center; gap:14px; }
+.cbx {
+  width:34px; height:34px; background:#fff; cursor:pointer; position:relative;
+}
+.cbx.on::after{ content:"✔"; position:absolute; inset:0; display:grid; place-items:center; color:var(--ok); font-size:26px;}
+.cbx.loading::after{ content:""; width:20px; height:20px; border:3px solid #ccc; border-top-color:var(--title); border-radius:50%; position:absolute; inset:0; margin:auto; animation:spin .6s linear infinite;}
+@keyframes spin { to { transform: rotate(360deg);} }
+
+/* traffic light / bolt captchas share a stage */
+.cap-stage { background:#20242e; padding:16px; display:grid; place-items:center; min-height:200px; position:relative;}
+.cap-help { font-size:16px; color:#5c5548; padding:8px 12px; text-align:center;}
+
+/* bolt captcha */
+.bolt-plate { position:relative; width:220px; height:150px; background:linear-gradient(135deg,#8b90a0,#5a6072); border:4px solid #3c414f;}
+.bolt {
+  position:absolute; width:40px; height:40px; border-radius:50%;
+  background: radial-gradient(circle at 35% 35%, #d9dde6, #8b90a0 70%);
+  border:3px solid #40454f; display:grid; place-items:center; cursor:pointer;
+  transition: transform .05s linear;
+}
+.bolt::before{ content:""; width:22px; height:5px; background:#3c414f; position:absolute; }
+.bolt.spinning::before { animation: boltspin .4s linear; }
+@keyframes boltspin { to { transform: rotate(180deg);} }
+.bolt.out { transform: scale(0); opacity:0; transition: all .3s ease-in;}
+.bolt.active { box-shadow: 0 0 0 3px #ffe08a; }
+
+/* mechanical (two-bolt, split controls) captcha */
+.mech2 { display:flex; gap:26px; justify-content:center; align-items:flex-start; padding:6px 4px; }
+.mbolt { display:flex; flex-direction:column; align-items:center; gap:6px; width:118px; }
+.mbolt .mkey {
+  font-family:var(--font-pixel); font-size:10px; color:#20242e;
+  background:#ffe08a; border:2px solid #b58a1f; padding:3px 6px; text-align:center;
+}
+.mbolt .marrow { font-size:20px; color:#ffe08a; line-height:.7; }
+/* the 2D hex nut (drawn straight) */
+.mnut {
+  width:86px; height:86px; position:relative; display:grid; place-items:center;
+  background: radial-gradient(circle at 40% 34%, #9aa0b0, #565c6b 72%);
+  border:3px solid #2b2f3a;
+  clip-path: polygon(25% 2%,75% 2%,100% 50%,75% 98%,25% 98%,0 50%);
+}
+.mnut::before {                       /* the nut's threaded bore */
+  content:""; position:absolute; width:58px; height:58px; border-radius:50%;
+  background:#20242e; box-shadow: inset 0 0 0 4px #454b59; z-index:1;
+}
+/* the bolt head that rotates inside the nut */
+.mbolt-head {
+  width:48px; height:48px; position:relative; z-index:2;
+  background: radial-gradient(circle at 34% 28%, #eef1f7, #aab0be 72%);
+  border:3px solid #2b2f3a; transform-origin:50% 50%; transition: transform .06s linear;
+  clip-path: polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%);
+}
+.mbolt-head::before, .mbolt-head::after { content:""; position:absolute; background:#2b2f3a; }
+.mbolt-head::before { left:50%; top:16%; width:5px; height:68%; transform:translateX(-50%); }
+.mbolt-head::after  { top:50%; left:16%; height:5px; width:68%; transform:translateY(-50%); }
+.mbolt.done .mbolt-head { transform: scale(0) rotate(540deg) !important; opacity:0; transition: all .45s ease-in; }
+.mbolt.done .mnut::before { box-shadow: inset 0 0 0 4px #4f9c5a; }
+.mbolt .mprog { width:100%; height:12px; background:#12121e; border:2px solid #2b2f3a; padding:1px; }
+.mbolt .mprog > i {
+  display:block; height:100%; width:0%;
+  background: repeating-linear-gradient(90deg,#3ad0b0 0 8px,#2ba48c 8px 12px); transition: width .1s linear;
+}
+.mbolt.done .mprog > i { background:#4f9c5a; width:100% !important; }
+.mbolt .mtag { font-family:var(--font-pixel); font-size:8px; color:#8f96a5; }
+.mbolt.done .mtag { color:#4f9c5a; }
+
+/* traffic-light captcha — cozy 2D pixel scene + selection grid */
+.tl-scene-wrap { padding:3px; background:#2f5fb0; }
+.tl-scene {
+  position:relative; width:100%; aspect-ratio:1; overflow:hidden;
+  background: linear-gradient(#a7d9f0 0%, #cfeaf2 44%, #e9d9b8 58%, #d8c199 66%);
+  image-rendering:pixelated;
+}
+.tl-sun {
+  position:absolute; top:8%; right:12%; width:15%; height:15%;
+  background:#ffe08a; border-radius:50%; box-shadow:0 0 0 5px rgba(255,224,138,.35);
+}
+.tl-cloud { position:absolute; height:8%; width:22%; background:#fff; border-radius:999px; opacity:.92; }
+.tl-cloud::before, .tl-cloud::after { content:""; position:absolute; background:#fff; border-radius:50%; }
+.tl-cloud::before { width:55%; height:150%; left:14%; top:-72%; }
+.tl-cloud::after  { width:42%; height:130%; right:12%; top:-42%; }
+.tl-cloud.c1 { top:13%; left:9%; }
+.tl-cloud.c2 { top:27%; left:54%; width:18%; }
+/* cozy hills / treeline on the horizon */
+.tl-city {
+  position:absolute; left:0; right:0; bottom:22%; height:26%; opacity:.85;
+  background:
+    radial-gradient(60% 120% at 18% 100%, #6f9c74 0 60%, transparent 61%),
+    radial-gradient(72% 130% at 55% 100%, #5f8f68 0 60%, transparent 61%),
+    radial-gradient(60% 120% at 88% 100%, #6f9c74 0 60%, transparent 61%);
+}
+.tl-road { position:absolute; left:0; right:0; bottom:0; height:22%; background:#3a3f46; border-top:3px solid #2a2d33; }
+.tl-road::after {
+  content:""; position:absolute; top:46%; left:0; right:0; height:9%;
+  background: repeating-linear-gradient(90deg,#ffd23f 0 8%,transparent 8% 18%);
+}
+/* the traffic light itself */
+.tl-light { position:absolute; top:0; bottom:0; width:25%; z-index:2; }
+.tl-pole { position:absolute; left:50%; transform:translateX(-50%); width:14%; bottom:0;
+  background: linear-gradient(90deg,#2b2f36,#4a515c 50%,#2b2f36); }
+.tl-head {
+  position:absolute; left:50%; transform:translateX(-50%); width:60%; height:44%;
+  background:#1c2028; border:2px solid #0e1015; border-radius:14%;
+  display:flex; flex-direction:column; align-items:center; justify-content:space-evenly;
+  padding:6% 0; box-shadow: inset 0 0 0 2px #333a45;
+}
+.tl-lamp { width:52%; aspect-ratio:1; border-radius:50%; background:#2a2d33; }
+.tl-lamp.r { background:#ff5a5a; box-shadow:0 0 6px 1px rgba(255,90,90,.7); }
+.tl-lamp.y { background:#ffd23f; }
+.tl-lamp.g { background:#4fd06a; }
+/* selection grid laid over the scene */
+.tl-grid { position:absolute; inset:0; z-index:3;
+  display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr); }
+.tl-cell { position:relative; cursor:pointer; border:1px solid rgba(255,255,255,.4); transition: background .08s; }
+.tl-cell:hover { background: rgba(255,255,255,.14); }
+.tl-cell.sel { background: rgba(47,95,176,.45); box-shadow: inset 0 0 0 3px #2f5fb0; }
+.tl-cell.sel::after {
+  content:"✔"; position:absolute; top:4px; left:4px; width:20px; height:20px;
+  display:grid; place-items:center; background:#2f5fb0; color:#fff; border-radius:50%;
+  font-size:12px; box-shadow:0 0 0 2px #fff;
+}
+
+/* ============================================================
+   Browser app
+   ============================================================ */
+.br { display:flex; flex-direction:column; height:100%; background:#fff;}
+.br .chrome { background: var(--chrome); padding:6px; display:flex; flex-direction:column; gap:6px; border-bottom:2px solid var(--chrome-dark);}
+.br .tabs { display:flex; gap:2px; }
+.br .tab { padding:6px 12px; font-family:var(--font-pixel); font-size:10px; background:var(--chrome-dark); cursor:pointer; }
+.br .tab.active { background:#fff; }
+.br .bar { display:flex; gap:6px; align-items:center; }
+.br .nav { display:flex; gap:2px; }
+.br .navbtn { width:28px; height:26px; display:grid; place-items:center; cursor:pointer; font-size:14px;}
+.br .url { flex:1; font-family:var(--font-body); font-size:20px; padding:4px 10px; outline:none; }
+.br .go { }
+.br .view { flex:1; overflow:auto; background:#fff; padding:0; }
+
+/* search engine home */
+.se { display:flex; flex-direction:column; align-items:center; padding:60px 20px; gap:20px; min-height:100%;
+      background: radial-gradient(120% 80% at 50% 0%, #eef4f2, #fff); }
+.se .logo { font-family:var(--font-logo); font-size:30px; color:var(--title); text-shadow:2px 2px 0 var(--accent-soft); }
+.se .logo b:nth-child(1){color:#d9536a} .se .logo b:nth-child(2){color:#e0a020} .se .logo b:nth-child(3){color:#3a8a4a} .se .logo b:nth-child(4){color:#2f4fd9}
+.se .sub { font-size:18px; color:var(--ink-soft); margin-top:-8px;}
+.se .searchrow { display:flex; width:min(520px,90%); }
+.se input { flex:1; font-family:var(--font-body); font-size:22px; padding:8px 12px; outline:none;}
+.se .tips { font-size:16px; color:var(--ink-soft); max-width:460px; text-align:center; }
+.se .lucky { display:flex; gap:10px; }
+
+/* results */
+.sr { padding:16px 22px; font-family:var(--font-body); }
+.sr .stat { font-size:16px; color:var(--ink-soft); margin-bottom:16px;}
+.sr .res { margin-bottom:18px; max-width:600px; }
+.sr .res .u { font-size:15px; color:var(--ok); }
+.sr .res .t { font-size:24px; color:var(--link); cursor:pointer; line-height:1.1;}
+.sr .res .t:hover { text-decoration:underline; }
+.sr .res .d { font-size:18px; color:var(--ink-soft); line-height:1.2; }
+.sr .pages { display:flex; gap:8px; margin:20px 0; font-size:22px; align-items:center; flex-wrap:wrap;}
+.sr .pages .pg { cursor:pointer; color:var(--link); padding:2px 6px;}
+.sr .pages .pg.on { color:var(--ink); font-weight:bold; background:var(--accent-soft);}
+
+/* "Search Successful" page shown after the mechanical captcha */
+.success { padding:26px 22px; font-family:var(--font-body); text-align:center; }
+.success .success-badge { font-size:56px; line-height:1; margin-bottom:8px; }
+.success h1 {
+  font-family:var(--font-logo); font-size:24px; color:var(--ok);
+  text-shadow:2px 2px 0 #cdead0; line-height:1.4; margin-bottom:10px;
+}
+.success > p { font-size:19px; color:var(--ink-soft); margin-bottom:18px; }
+.success .success-card { background:#fff; text-align:left; max-width:600px; margin:0 auto; }
+
+/* generic app content */
+.pad { padding:14px; font-size:20px; line-height:1.35; }
+.pad textarea { width:100%; height:100%; min-height:200px; border:none; outline:none; resize:none; font-family:var(--font-body); font-size:22px; background:#fff; padding:8px;}
+
+/* ============================================================
+   Snake game
+   ============================================================ */
+.snake-wrap { display:flex; flex-direction:column; height:100%; background:#1a1f18; }
+.snake-hud {
+  display:flex; justify-content:space-between; align-items:center; padding:6px 12px;
+  font-family:var(--font-pixel); font-size:11px; color:#bdf0b0; background:#0f130d;
+}
+.snake-hud .lvl b { color:#ffe08a; }
+.snake-canvas-wrap { flex:1; display:grid; place-items:center; padding:10px; position:relative; }
+#snakeCanvas { background:#0d110b; box-shadow: inset 0 0 0 2px #2c3a26; image-rendering:pixelated;}
+.snake-over {
+  position:absolute; inset:0; display:none; flex-direction:column; gap:14px;
+  align-items:center; justify-content:center; background:rgba(10,14,9,.86); color:#e8ffd8;
+  font-family:var(--font-pixel); text-align:center; padding:20px;
+}
+.snake-over.show { display:flex; }
+.snake-over h2 { font-size:16px; color:#ff6b6b; line-height:1.6; }
+.snake-start {
+  position:absolute; inset:0; display:flex; flex-direction:column; gap:16px;
+  align-items:center; justify-content:center; background:rgba(10,14,9,.92); color:#bdf0b0;
+  font-family:var(--font-pixel); text-align:center; padding:20px;
+}
+.snake-start h2 { font-size:16px; color:#ffe08a; line-height:1.7;}
+.snake-start p { font-size:11px; color:#8fbf82; line-height:1.9; font-family:var(--font-pixel);}
+
+/* ============================================================
+   Rickroll finale + CRT overlay
+   ============================================================ */
+/* Subtle CRT scanlines — now always on for a cozy retro-tube feel.
+   The finale bumps intensity via .on. */
+#crt {
+  position:absolute; inset:0; z-index:12000; pointer-events:none; display:block;
+  opacity:.45;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.09) 0 1px, transparent 1px 3px);
+  mix-blend-mode:multiply;
+  animation: crtflicker 4s steps(2) infinite;
+}
+#crt.on {
+  opacity:1;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
+}
+@keyframes crtflicker { 0%,96%,100% { opacity:.45; } 98% { opacity:.32; } }
+
+.finale {
+  position:absolute; inset:0; z-index:11000; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:22px; padding:24px; text-align:center;
+  background: radial-gradient(120% 120% at 50% 50%, #241a3a, #0a0713);
+  overflow:hidden;
+}
+.finale.show { display:flex; }
+.finale .rr {
+  font-family:var(--font-logo); font-size:26px; color:#ffe08a; line-height:1.7;
+  text-shadow: 3px 3px 0 #d9536a; z-index:2;
+}
+.finale .dancer { font-size:90px; animation: dance .5s steps(2) infinite; z-index:2;}
+@keyframes dance { 50% { transform: translateY(-14px) rotate(6deg);} }
+.finale .lyric { font-family:var(--font-body); font-size:26px; color:#a9c8ff; min-height:32px; z-index:2;}
+.finale .q { font-family:var(--font-pixel); font-size:14px; color:#fff; line-height:1.8; z-index:2;}
+.finale .opts { display:flex; flex-direction:column; gap:10px; z-index:2; }
+.finale .disco { position:absolute; inset:0; opacity:.5; z-index:0;
+  background: conic-gradient(#d9536a,#e0a020,#3a8a4a,#2f4fd9,#6a5bc4,#d9536a);
+  animation: spin 6s linear infinite; filter: blur(40px);}
+.finale .finale-inner { z-index:2; display:flex; flex-direction:column; align-items:center; gap:20px; }
+.finale .notes { display:flex; gap:18px; font-size:30px; z-index:2; }
+.finale .notes span { display:inline-block; animation: dance .5s steps(2) infinite; }
+.finale .notes span:nth-child(2){ animation-delay:.1s } .finale .notes span:nth-child(3){ animation-delay:.2s }
+.finale .notes span:nth-child(4){ animation-delay:.3s } .finale .notes span:nth-child(5){ animation-delay:.4s }
+.finale .marquee { width:min(560px,86vw); overflow:hidden; white-space:nowrap;
+  border-top:2px solid #6a5bc4; border-bottom:2px solid #6a5bc4; padding:6px 0; z-index:2; }
+.finale .marquee > span { display:inline-block; padding-left:100%;
+  font-family:var(--font-pixel); font-size:13px; color:#ffe08a; animation: mq 13s linear infinite; }
+@keyframes mq { to { transform: translateX(-200%); } }
+.finale .you { min-width:180px; font-size:20px; padding:14px 22px; animation: dance .6s steps(2) infinite; }
+
+/* Blue Screen of Death — the exit */
+.bsod-body { background:#0000aa !important; overflow:hidden; }
+.bsod {
+  position:fixed; inset:0; background:#0000aa; color:#fff; z-index:99999;
+  font-family:var(--font-body), monospace; font-size:22px; line-height:1.5;
+  padding:9vh 9vw; overflow:auto;
+}
+.bsod .bsod-face { font-family:var(--font-logo); font-size:64px; margin-bottom:18px; }
+.bsod h1 { font-family:var(--font-pixel); font-size:26px; margin-bottom:22px; letter-spacing:1px; }
+.bsod p { margin-bottom:16px; max-width:900px; }
+.bsod .stop { background:#c0c0c0; color:#0000aa; display:inline-block;
+  padding:3px 12px; margin:6px 0 18px; font-family:var(--font-pixel); font-size:13px; }
+
+/* generic modal veil for captcha gates */
+.veil {
+  position:absolute; inset:0; background:rgba(20,24,34,.55); z-index:400;
+  display:grid; place-items:center;
+}
+
+/* utility */
+.center { display:grid; place-items:center; height:100%; }
+.stack { display:flex; flex-direction:column; gap:10px; }
+.row { display:flex; gap:8px; }
+.hidden { display:none !important; }
+.nowrap { white-space:nowrap; }
+
+/* responsive-ish for small screens */
+@media (max-width: 640px) {
+  .win { max-width: 96vw; }
+  #boot .logo { font-size: 18px; }
+}
+
+/* ============================================================
+   Text captcha + pattern captcha (login gauntlet & browser gate)
+   ============================================================ */
+.cap-glyph {
+  background:#20242e; color:#dfe7ff; text-align:center;
+  font-family:var(--font-logo); font-size:30px; letter-spacing:2px;
+  padding:20px 12px; user-select:none; overflow:hidden; line-height:1.4;
+  background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 5px);
+}
+.cap-glyph .cap-quote { font-family:var(--font-body); font-size:24px; color:#a9c8ff; letter-spacing:0; }
+.cap-note { font-size:16px; color:var(--ink-soft); padding:8px 12px 0; text-align:center; }
+.cap-inwrap { padding:12px 12px 4px; }
+.cap-input {
+  width:100%; font-family:var(--font-body); font-size:24px; padding:8px 10px;
+  color:var(--ink); outline:none;
+}
+.cap-input:focus { box-shadow: inset 2px 2px 0 0 var(--chrome-dark), inset -2px -2px 0 0 var(--chrome-light), 0 0 0 2px var(--title); }
+.cap-input:disabled { color:var(--ok); background:#eef7ee; }
+
+.cap-seq {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  flex-wrap:wrap; padding:20px 12px; background:#20242e;
+}
+.cap-seqcell {
+  min-width:52px; height:52px; padding:0 6px; display:grid; place-items:center;
+  font-size:26px; background:#cfd8e6;
+}
+.cap-qcell { background:#ffe08a; color:#7a1f1f; font-family:var(--font-logo); font-size:22px; }
+.cap-opts {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px;
+}
+.cap-opt {
+  aspect-ratio:1; display:grid; place-items:center; font-size:26px; cursor:pointer;
+  background:var(--chrome); min-height:48px;
+}
+.cap-opt:hover { background:#ded5c0; }
+.cap-opt.sel { box-shadow: inset 2px 2px 0 0 var(--chrome-dark), inset -2px -2px 0 0 var(--chrome-light), 0 0 0 3px var(--title); background:#dfe7ff; }
+
+/* the locked mini-window that drops over a gated browser window */
+.lockbox { width:344px; max-width:94%; }
+.lockbox .lockhead {
+  background: linear-gradient(90deg,#7a1f1f,#c62828); color:#fff;
+  font-family:var(--font-pixel); font-size:11px; padding:6px 10px;
+  display:flex; align-items:center; gap:8px;
+}
+.lockbox .lockbody { background:var(--chrome); }
+.veil.locking { animation: errpop .16s ease-out; }
+
+/* login gauntlet chrome */
+.login-prog {
+  font-family:var(--font-pixel); font-size:10px; color:var(--title);
+  text-align:center; padding:2px 0 12px; letter-spacing:.5px;
+}
+.login-host .cap { width:auto; }
+.login-host .banner { border-radius:0; }
+/* compact the login captchas so even the tallest (step 6) fits the card */
+.login-host .cap .banner { padding:10px 12px; }
+.login-host .cap .banner .k { font-size:11px; }
+.login-host .cap .banner .q { font-size:18px; margin-top:4px; }
+.login-host .cap-glyph { font-size:20px; padding:12px 10px; letter-spacing:1px; line-height:1.3; }
+.login-host .cap-glyph .cap-quote { font-size:17px; }
+.login-host .cap-note { font-size:14px; padding:6px 12px 0; }
+.login-host .cap-inwrap { padding:10px 12px 2px; }
+.login-host .cap-input { font-size:20px; padding:6px 9px; }
+.login-host .foot { padding:8px 12px; }
+.login-host .cap-msg { font-size:16px; padding:4px 12px; min-height:20px; }
+.login-host .cap-counter { padding:0 12px 6px; }
+
+/* app windows get a sensible default size floor */
+.appwin .body { background:#fff; }
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
