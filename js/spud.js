@@ -136,8 +136,9 @@
     scheduleSip();
     updateMood();
 
-    // the cozy opener, before he knows you
-    setTimeout(() => { if (say(CTX.greet[0])) lastSpoke = now(); }, 2600);
+    // the cozy opener, before he knows you (skipped if he's already wary,
+    // e.g. when previewing a mood with ?spud=2)
+    setTimeout(() => { if (tier() === 0 && say(CTX.greet[0])) lastSpoke = now(); }, 2600);
   }
 
   /* ---- the suspicion heartbeat ---- */
