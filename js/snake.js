@@ -271,6 +271,8 @@
       overEl.querySelector(".over-msg").innerHTML = `GAME OVER<br>SCORE ${score}`;
       overEl.classList.add("show");
       Sound && Sound.crash();
+      // let Spud offer his (dubious) condolences
+      try { window.dispatchEvent(new CustomEvent("snake:over", { detail: { score } })); } catch (e) {}
     }
 
     // start/over overlays use .show; hide the initial start card via display too

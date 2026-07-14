@@ -127,6 +127,12 @@
     // start the calm lo-fi background loop (audio ctx is already awake by now)
     try { Sound && Sound.ambientStart && Sound.ambientStart(); } catch (e) {}
 
+    // the presence engine: music follows the mouse; silence gets suspicious
+    try { global.Presence && Presence.start(); } catch (e) {}
+
+    // Spud the Potato takes his seat on the taskbar
+    try { global.Spud && Spud.init(); } catch (e) {}
+
     // a warm little welcome popup
     setTimeout(() => {
       WM.error({
@@ -220,13 +226,20 @@
     const stars = desktop.querySelector(".stars");
     if (stars && !stars.childElementCount) {
       const frag = document.createDocumentFragment();
-      for (let n = 0; n < 46; n++) {
+      for (let n = 0; n < 80; n++) {
         const s = document.createElement("i");
+        const bright = Math.random() < 0.15;
+        const sz = bright ? (Math.random() < 0.5 ? 2 : 3)
+                          : (Math.random() < 0.7 ? 1 : 2);
+        s.style.width = s.style.height = sz + "px";
         s.style.left = rnd(0, 100).toFixed(2) + "%";
         s.style.top = rnd(0, 100).toFixed(2) + "%";
-        s.style.animationDelay = rnd(0, 3.2).toFixed(2) + "s";
-        s.style.animationDuration = rnd(2.2, 4.4).toFixed(2) + "s";
-        if (Math.random() < 0.25) { s.style.width = "3px"; s.style.height = "3px"; }
+        s.style.setProperty("--td", rnd(0, 4).toFixed(2) + "s");
+        s.style.setProperty("--tw", rnd(2.4, 5).toFixed(2) + "s");
+        const tint = Math.random();
+        if (tint < 0.30) s.classList.add("warm");
+        else if (tint < 0.55) s.classList.add("cool");
+        if (bright) s.classList.add("bright");
         frag.appendChild(s);
       }
       stars.appendChild(frag);
@@ -322,7 +335,8 @@
     const cap = ("cap" in p) ? p.cap : (("queue" in p) ? p.queue : null);
     if (p.go === "login" || "login" in p) { showLogin(); return true; }
     if (p.go === "desktop" || cap != null || p.q != null ||
-        p.snake != null || "finale" in p || "desktop" in p) {
+        p.snake != null || "finale" in p || "desktop" in p ||
+        "audiocheck" in p || "idle" in p || "spud" in p) {
       toDesktop();
       if (cap != null) setTimeout(() => Gauntlet.popup({ type: capTypeFor(cap) }), 150);
       if (p.q != null) setTimeout(() => Browser.open({ q: p.q }), cap != null ? 400 : 150);
@@ -345,7 +359,10 @@
         "\n  ?cap=1 (random)  ?cap=2 (bolt)  ?cap=traffic|pattern|grid|checkbox|text|mechanical" +
         "\n  ?q=term    (open browser + search)" +
         "\n  ?snake=2   (start Snake at level N: 2=glitch storm, 3=near finale)" +
-        "\n  ?finale=1  (jump straight to the rickroll finale)");
+        "\n  ?finale=1  (jump straight to the rickroll finale)" +
+        "\n  ?audiocheck=1 (pop the Audio Activity Check now)" +
+        "\n  ?idle=fast    (short idle timers: 1.5s fade, 20s check)" +
+        "\n  ?spud=0|1|2|3 (preview Spud's mood: friendly→observant→suspicious→predictive)");
     } catch (e) {}
     if (route(getParams())) return;
     boot();

@@ -11,6 +11,7 @@
   const state = {
     solved: 0,       // total captchas ever solved this session
     streak: 0,       // solved back-to-back inside the current gauntlet
+    fails: 0,        // total wrong answers this session (watched by Spud)
     inFinale: false
   };
 
@@ -129,8 +130,9 @@
     const N = 4;                       // 4x4 grid over the scene
     const col = R(0, N - 1);           // which column the pole stands in
     const topRow = R(0, 1);            // head starts in row 0 or 1
-    const correct = new Set();         // scene cells the light covers
-    for (let r = topRow; r < N; r++) correct.add(r * N + col);
+    // the traffic-light HEAD (the lamp box) spans two stacked cells — that,
+    // not the thin pole beneath it, is what counts as "the traffic light"
+    const correct = new Set([topRow * N + col, (topRow + 1) * N + col]);
 
     // cozy pixel scene props (a couple of clouds + buildings for vibe)
     const cells = [...Array(N * N).keys()].map(i =>
@@ -575,7 +577,11 @@
     const type = opts.type || pickType(state.solved);
     const api = {
       solve() { state.solved++; if (onSolved) onSolved(); },
-      fail() {}
+      fail() {
+        state.fails++;
+        // let context-aware watchers (Spud) know a human just slipped up
+        try { global.dispatchEvent(new CustomEvent("captcha:fail", { detail: { fails: state.fails } })); } catch (e) {}
+      }
     };
     if (type === "text") { TYPES.text(host, api, opts.spec); return; }
     if (type === "pattern") { TYPES.pattern(host, api, opts.round); return; }

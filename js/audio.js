@@ -52,9 +52,10 @@
      A soft chord-pad progression through a warm lowpass filter.
      Routed through its own gain "bus" so mute can duck it smoothly
      without cutting the one-shot UI beeps.                        */
-  let ambientGain = null, ambientFilter = null;
+  let ambientGain = null, ambientFilter = null, presenceGain = null;
   const ambient = { on: false, timer: null, idx: 0 };
   const AMBIENT_LEVEL = 0.9;
+  const FILTER_OPEN = 1100, FILTER_CLOSED = 220;  // warm vs. muffled/eerie
 
   // cozy Cmaj7 -> Am7 -> Fmaj7 -> G, one bar each
   const AMB_CHORDS = [
@@ -68,13 +69,15 @@
   function ambientBus() {
     const c = ac();
     if (!ambientGain) {
-      ambientGain = c.createGain();
+      ambientGain = c.createGain();                 // volume / mute
       ambientGain.gain.value = muted ? 0.0001 : AMBIENT_LEVEL;
+      presenceGain = c.createGain();                // movement duck (1 = present)
+      presenceGain.gain.value = 1;
       ambientFilter = c.createBiquadFilter();
       ambientFilter.type = "lowpass";
-      ambientFilter.frequency.value = 1100;   // soft, muffled, warm
+      ambientFilter.frequency.value = FILTER_OPEN;  // soft, muffled, warm
       ambientFilter.Q.value = 0.6;
-      ambientGain.connect(ambientFilter).connect(c.destination);
+      ambientGain.connect(presenceGain).connect(ambientFilter).connect(c.destination);
     }
     return ambientGain;
   }
@@ -138,6 +141,46 @@
     ambientStop() {
       ambient.on = false;
       if (ambient.timer) { clearTimeout(ambient.timer); ambient.timer = null; }
+    },
+
+    // movement-reactive duck: presence(true) fades music in and opens the
+    // filter; presence(false) fades toward silence and muffles it (eerie).
+    // Uses setTargetAtTime so the glide starts from the true current value.
+    presence(on, secs) {
+      if (!presenceGain) return;
+      try {
+        const c = ac(); const t = c.currentTime;
+        const tc = Math.max(0.05, (secs == null ? 1.2 : secs) / 3);
+        presenceGain.gain.setTargetAtTime(on ? 1 : 0.0001, t, tc);
+        ambientFilter.frequency.setTargetAtTime(on ? FILTER_OPEN : FILTER_CLOSED, t, tc);
+      } catch (e) {}
+    },
+
+    // a low, slightly detuned swell — the sound of being watched
+    eerie() {
+      if (muted) return;
+      const c = ac(); const t0 = c.currentTime;
+      [98, 100.6, 147].forEach((f) => {
+        const osc = c.createOscillator(); const g = c.createGain();
+        osc.type = "sine"; osc.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(0.11, t0 + 0.7);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.3);
+        osc.connect(g).connect(c.destination);
+        osc.start(t0); osc.stop(t0 + 2.4);
+      });
+    },
+
+    // soft metronome tick for the rhythm task
+    beat() { tone(300, 0.06, "triangle", 0, 0.09); },
+
+    // short retro speech blip — pitch varies per char for that "animalese" feel
+    blip(freq) { tone(freq || 460, 0.028, "square", 0, 0.045); },
+
+    // a soft tea sip: a little slurp down
+    sip() {
+      tone(520, 0.05, "sine", 0, 0.045);
+      tone(360, 0.11, "sine", 0.045, 0.045);
     },
 
     click()  { tone(660, 0.04, "square", 0, 0.08); },
