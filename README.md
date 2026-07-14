@@ -21,7 +21,7 @@ It's best experienced on a desktop with a mouse. A lot of the jokes are made wit
 
 You start with a fake boot screen, complete with a loading bar and some questionable status messages like *"Calibrating trust levels: LOW."* After that comes the login, where instead of entering a password, you have to survive a series of CAPTCHAs before the desktop finally lets you in.
 
-Once you're in, you'll find a normal-looking desktop with icons, windows, and a Start menu.
+Once you're in, you'll find a normal-looking desktop with icons, windows, and a Start menu. You can drag the windows around and stack a few at once, but only three. Try to open a fourth and CaptchaOS panics at you with a pile of error boxes, because of course it does.
 
 * **Cozle Browser** — Search anything you want. Click a result, and it decides that looks suspicious, so you have to solve another CAPTCHA first.
 * **CAPTCHA Trials** — Take on a series of CAPTCHAs that keep getting weirder and harder the further you go.
@@ -44,9 +44,9 @@ As Spud gets more suspicious, his eyes start following your cursor around. He ne
 
 Under all the paranoia, it's actually meant to be a cozy little place to hang out.
 
-The desktop is set at night, with a glowing moon, twinkling stars, drifting clouds, gentle rain, and a warm lamp glowing in the corner. A soft CRT effect sits over the screen, and a real clock keeps ticking away in the taskbar.
+The desktop is set at night, with a glowing moon, twinkling stars, the odd shooting star, drifting clouds, gentle rain, and a warm lamp glowing in the corner. A soft CRT effect sits over the screen, and a real clock keeps ticking away in the taskbar.
 
-All the audio is generated live using the Web Audio API, so there are no sound files anywhere in the project. That includes a slow lo-fi background loop that plays while you're active. Stop moving for a while and the music fades out, like the OS thinks you've disappeared. Leave it long enough and it gets worried, throwing an **Audio Activity Check** at you. You'll have to move your cursor in a circle, wiggle it around, or click along to a beat while a little meter checks your "liveliness." Pass it, and the music comes back.
+All the audio is generated live using the Web Audio API, so there are no sound files anywhere in the project. That includes a slow lo-fi background loop that plays while you're active. Stop moving for a while and the music fades out, like the OS thinks you've disappeared. Leave it long enough and it gets worried. The whole screen goes dark for an **Alive Test**: a giant Spud looms in and watches while you move your cursor in a circle, wiggle it around, or click along to a beat, and a little meter reads your "liveliness." Nothing else is clickable until you pass. Do it, and the music comes back.
 
 ## Poking Around
 
@@ -57,7 +57,7 @@ If you just want to explore without going through the whole boot process, there 
 * `?q=cats` — Open the browser with a search already loaded.
 * `?snake=2` — Start Snake a couple of levels in.
 * `?spud=3` — Make Spud fully paranoid right away.
-* `?audiocheck=1` — Trigger the Audio Activity Check.
+* `?audiocheck=1` — Trigger the Alive Test takeover.
 * `?finale=1` — Jump straight to the ending (you've been warned).
 
 ## How It's Built
