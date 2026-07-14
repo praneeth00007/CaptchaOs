@@ -84,15 +84,37 @@
   /* ---------------- DESKTOP ---------------- */
   let deskReady = false;
 
-  /* app registry — the star is Browser; the rest are cozy filler/traps */
+  /* app registry — the star is Browser; the rest are cozy filler/traps.
+     dialog:true apps just pop a message box, so they don't count as windows. */
   const APPS = [
     { id: "browser", icon: "🌐", label: "Cozle Browser", open: () => Browser.open() },
     { id: "snake",   icon: "🐍", label: "Snake",         open: () => Snake.open() },
     { id: "notes",   icon: "📝", label: "Notepad",       open: openNotepad },
     { id: "trials",  icon: "🧩", label: "CAPTCHA Trials",open: () => Gauntlet.run({}) },
-    { id: "control", icon: "🎛️", label: "Control Panel",  open: openControlPanel },
-    { id: "bin",     icon: "🗑️", label: "Recycle Bin",   open: openRecycleBin }
+    { id: "control", icon: "🎛️", label: "Control Panel",  open: openControlPanel, dialog: true },
+    { id: "bin",     icon: "🗑️", label: "Recycle Bin",   open: openRecycleBin, dialog: true }
   ];
+
+  /* CaptchaOS runs a strict three-window policy. Try to open a fourth and
+     it panics at you in cascading error boxes, snake-storm style. */
+  const MAX_WINDOWS = 3;
+  const WINDOW_LIMIT_ERRORS = [
+    { title: "CaptchaOS", tico: "🪟", icon: "⚠", sound: "critical",
+      msg: "Too many windows open. CaptchaOS holds three at a time. It always has. It just never mentioned it." },
+    { title: "Out of Memory", tico: "🧠", icon: "🚫",
+      msg: "Memory exhausted. Close a window, or a thought, and try again." },
+    { title: "Resource Limit", tico: "⛔", icon: "❌",
+      msg: "Window quota reached. Three is plenty. Four is greed." }
+  ];
+
+  function launch(app) {
+    if (!app.dialog && WM.appCount() >= MAX_WINDOWS) {
+      try { Sound && Sound.bad && Sound.bad(); } catch (e) {}
+      WM.errorStorm(WINDOW_LIMIT_ERRORS, 320);
+      return;
+    }
+    try { app.open(); } catch (e) {}
+  }
 
   function enterDesktop() {
     if (deskReady) return;
@@ -110,7 +132,7 @@
         icons.querySelectorAll(".dicon").forEach((d) => d.classList.remove("sel"));
         el.classList.add("sel");
       };
-      el.ondblclick = () => { try { Sound && Sound.click(); } catch (e) {} app.open(); };
+      el.ondblclick = () => { try { Sound && Sound.click(); } catch (e) {} launch(app); };
       icons.appendChild(el);
     });
 
@@ -158,7 +180,7 @@
       const it = document.createElement("div");
       it.className = "smitem";
       it.innerHTML = `<span class="g">${app.icon}</span><span>${app.label}</span>`;
-      it.onclick = () => { closeMenu(); try { Sound && Sound.click(); } catch (e) {} app.open(); };
+      it.onclick = () => { closeMenu(); try { Sound && Sound.click(); } catch (e) {} launch(app); };
       items.appendChild(it);
     });
     const sep = document.createElement("div");

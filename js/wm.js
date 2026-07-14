@@ -116,7 +116,7 @@
         else body.appendChild(opts.content);
       }
 
-      const meta = { title: opts.title || "Window", icon: opts.icon, noTask: opts.noTask };
+      const meta = { title: opts.title || "Window", icon: opts.icon, noTask: opts.noTask, system: !!opts.system };
       const record = { el: win, meta };
       wins.set(id, record);
 
@@ -222,6 +222,8 @@
     },
 
     count() { return wins.size; },
+    // count only real app windows — captcha/gate windows pass {system:true}
+    appCount() { let n = 0; for (const [, w] of wins) if (!w.meta.system) n++; return n; },
     focusEl: focus,
     syncTasks
   };

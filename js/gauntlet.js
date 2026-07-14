@@ -22,7 +22,8 @@
       icon: "🛡️",
       width: 344,
       content: host,
-      resizable: false
+      resizable: false,
+      system: true            // a verification gate, not a window the user chose to open
     });
     C().renderInto(host, () => {
       if (opts.onPass) opts.onPass();
