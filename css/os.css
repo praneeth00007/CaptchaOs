@@ -1172,4 +1172,10 @@ body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 /* reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
+  .spud-guy { transform: translateX(-50%) scale(1.5) !important; }
+  .spud-eyes .eye b { transform: translate(.5px,1px) !important; }
+  .spud-guy.sipping .spud-eyes .eye { transform: scaleY(.3) !important; }
+  .spud-guy.sipping .spud-mouth { opacity:1 !important; }
+  .spud-steam i { opacity:0 !important; }
+  .spud-bubble { transform: scale(1) !important; opacity:1 !important; pointer-events:auto !important; }
 }
