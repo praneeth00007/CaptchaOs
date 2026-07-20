@@ -17,11 +17,12 @@
   const BACKING_MAX = 240;         // backing-store cap (perf, and a pixelated look)
   const BACKING_SCALE = 0.55;
   const MAX_BLUR = 7;              // px, at 100% coverage
-  const FOG_TICK_MS = 950;         // how often the glass grows more frost
-  const FOG_GAIN = 9;              // coverage added per tick (roughly, via new blobs)
-  const SAMPLE_MS = 220;           // throttle for the coverage readback
+  const FOG_TICK_MS = 950;         // how often an ambient frost pass runs
+  const AMBIENT_ALPHA = 0.005;     // per-tick frost gain — gentle, so clears stay readable
+  const WIPE_GRACE_MS = 1200;      // no re-fogging for a beat after you stop wiping
+  const SAMPLE_MS = 160;           // throttle for the coverage readback
   const LOCK_MS = 10000;
-  const WIPE_R = 26;               // wipe brush radius, backing px
+  const WIPE_R = 38;               // wipe brush radius, backing px — generous eraser
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -80,8 +81,8 @@
 
     const st = {
       win, body, canvas, g: canvas.getContext("2d"), blur, hint, lockOv,
-      coverage: 0,                 // 0..100, single source of truth
-      wiping: false, last: null, stroke: [],
+      coverage: 0,                 // 0..100, single source of truth — sampled, never guessed
+      wiping: false, last: null, stroke: [], lastWipeEnd: 0,
       locked: false, lockTimer: null, lockTick: null,
       fogTimer: null, raf: null, lastSample: 0,
       wipedOnce: false, ro: null
@@ -118,7 +119,10 @@
     const bh = Math.min(BACKING_MAX, Math.round(h * BACKING_SCALE));
     if (st.canvas.width !== bw || st.canvas.height !== bh) {
       st.canvas.width = bw; st.canvas.height = bh;
-      paintFullFrost(st);           // fresh backing store starts opaque at current coverage
+      // resizing clears the backing store — repaint at whatever coverage the
+      // window already had (0 on first mount, so new windows start clean)
+      if (st.coverage > 0) frostFill(st, clamp(st.coverage / 100, 0, 1));
+      kickstart(st);
     }
   }
 
@@ -141,23 +145,36 @@
 
   function paintFullFrost(st) { frostFill(st, 1); }
 
-  /* the tick that slowly re-fogs the glass: a fresh, lighter frost pass
-     laid on top with source-over, so wiped-clear patches fill back in */
+  /* the tick that slowly re-fogs the glass. Deliberately gentle: a single,
+     near-invisible source-over pass per tick, so a window you just wiped
+     clear stays readable for a good while instead of the condensation
+     engine fighting you for it. Coverage itself is never hand-incremented
+     here — the real getImageData sample (below) is the only source of
+     truth, so the blur always tracks what's actually still fogged. */
   function growFog(st) {
     if (st.locked || st.wiping) return;
-    if (st.coverage >= 99) return;
-    frostFill(st, 0.34);
-    st.coverage = clamp(st.coverage + FOG_GAIN, 0, 100);
-    applyCoverage(st);
-    kickstart(st);
+    if (performance.now() - st.lastWipeEnd < WIPE_GRACE_MS) return;
+    if (st.coverage >= 97) return;
+    const g = st.g, w = st.canvas.width, h = st.canvas.height;
+    g.globalCompositeOperation = "source-over";
+    g.fillStyle = "rgba(220,230,240," + AMBIENT_ALPHA + ")";
+    g.fillRect(0, 0, w, h);
+    kickstart(st);           // wake the sampler so the new coverage is picked up
   }
 
   function applyCoverage(st) {
-    const px = (st.coverage / 100) * MAX_BLUR;
-    st.blur.style.backdropFilter = "blur(" + px.toFixed(2) + "px)";
-    st.blur.style.webkitBackdropFilter = "blur(" + px.toFixed(2) + "px)";
-    st.blur.style.opacity = st.coverage > 0 ? "1" : "0";
-    st.canvas.style.opacity = st.coverage > 0 ? "1" : "0";
+    // clear glass means NO blur — remove the filter outright rather than
+    // leaving a stale blur(0px) that some engines still composite as a layer
+    if (st.coverage <= 1) {
+      st.blur.style.backdropFilter = "none";
+      st.blur.style.webkitBackdropFilter = "none";
+    } else {
+      const px = (st.coverage / 100) * MAX_BLUR;
+      st.blur.style.backdropFilter = "blur(" + px.toFixed(2) + "px)";
+      st.blur.style.webkitBackdropFilter = "blur(" + px.toFixed(2) + "px)";
+    }
+    st.blur.style.opacity = st.coverage > 1 ? "1" : "0";
+    st.canvas.style.opacity = st.coverage > 1 ? "1" : "0";
     st.hint.classList.toggle("show", st.coverage > 30 && !st.wipedOnce);
   }
 
@@ -232,6 +249,7 @@
   function onUp(st, e) {
     if (!st.wiping) return;
     st.wiping = false;
+    st.lastWipeEnd = performance.now();
     if (st.stroke.length > 4) analyzeStroke(st, st.stroke);
     st.stroke = []; st.last = null;
   }
