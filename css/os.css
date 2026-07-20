@@ -1544,3 +1544,21 @@ body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
   cursor: pointer; padding: 3px 6px; border: 1px solid #3a4450;
 }
 .brew-sudo-x:hover { color: #fff; background: #3a4450; }
+
+/* ============================================================
+   Taskbar Quick Launch — every app as a hover-labelled icon
+   ============================================================ */
+#quicklaunch {
+  display: flex; align-items: center; gap: 3px; height: 30px;
+  padding: 0 4px; flex: 0 0 auto; max-width: 46%; overflow-x: auto; overflow-y: hidden;
+}
+#quicklaunch::-webkit-scrollbar { height: 4px; }
+#quicklaunch::-webkit-scrollbar-thumb { background: var(--chrome-dark); }
+.qlicon {
+  width: 26px; height: 24px; flex: 0 0 auto; display: grid; place-items: center;
+  font-size: 15px; cursor: pointer; line-height: 1; user-select: none;
+  box-shadow: inset 1px 1px 0 var(--chrome-light), inset -1px -1px 0 var(--chrome-dark);
+  background: var(--chrome);
+}
+.qlicon:hover { background: #ded5c0; }
+.qlicon:active { box-shadow: inset -1px -1px 0 var(--chrome-light), inset 1px 1px 0 var(--chrome-dark); }

@@ -124,26 +124,10 @@
     deskReady = true;
     const desktop = $("#desktop");
     const icons = desktop.querySelector(".icons");
-    icons.innerHTML = "";
-
-    APPS.forEach((app) => {
-      const el = document.createElement("div");
-      el.className = "dicon";
-      el.innerHTML =
-        `<div class="glyph">${app.icon}</div><div class="lbl">${app.label}</div>`;
-      el.onclick = () => {
-        icons.querySelectorAll(".dicon").forEach((d) => d.classList.remove("sel"));
-        el.classList.add("sel");
-      };
-      el.ondblclick = () => { try { Sound && Sound.click(); } catch (e) {} launch(app); };
-      icons.appendChild(el);
-    });
-
-    // clicking empty desktop (anywhere but an icon) clears selection
-    desktop.addEventListener("pointerdown", (e) => {
-      if (!e.target.closest(".dicon"))
-        icons.querySelectorAll(".dicon").forEach((d) => d.classList.remove("sel"));
-    });
+    // Apps now live in the taskbar's Quick Launch strip (built in initTaskbar),
+    // so the desktop stays clear — more room for the cozy nighttime scene, and
+    // plenty of headroom as we add more apps.
+    if (icons) icons.innerHTML = "";
 
     initAmbient();
     initTaskbar();
@@ -176,6 +160,24 @@
     const menu = $("#startmenu");
     const items = menu.querySelector(".items");
     const mute = $("#mute");
+    const quick = $("#quicklaunch");
+
+    // Quick Launch: one icon-button per app, right on the taskbar. Hover shows
+    // the name (native title tooltip). Single click launches — this is where
+    // apps live now, so the desktop stays clear and new apps just slot in.
+    if (quick) {
+      quick.innerHTML = "";
+      APPS.forEach((app) => {
+        const q = document.createElement("div");
+        q.className = "qlicon";
+        q.title = app.label;                       // hover tooltip
+        q.setAttribute("role", "button");
+        q.setAttribute("aria-label", app.label);
+        q.textContent = app.icon;
+        q.onclick = () => { try { Sound && Sound.click(); } catch (e) {} launch(app); };
+        quick.appendChild(q);
+      });
+    }
 
     // build start menu from APPS + a separator + a "log off"
     items.innerHTML = "";
