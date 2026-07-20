@@ -129,6 +129,8 @@
     },
     isMuted() { return muted; },
     resume() { try { ac(); } catch (e) {} },
+    // hand the shared AudioContext to other apps (e.g. the Ambient Mixer)
+    ctx() { return ac(); },
 
     // start/stop the background lo-fi loop
     ambientStart() {

@@ -334,6 +334,100 @@
     document.addEventListener("keydown", onKey, true);
   };
 
+  /* ============ TYPE: NUT — match the reference by rotating the nut ============
+     One upright bolt with a hex nut on the thread. ← screws it up, → screws it
+     down; land it where the little reference bolt shows, then Verify.          */
+  TYPES.nut = function (host, api) {
+    host.classList.add("cap", "nutcap");
+    const STEP = 100 / 14;          // ~14 taps across the whole thread
+    const TOL = 6;                  // how close counts as matched
+    let target = 0, pos = 0;
+
+    function newTarget() {          // land it low-ish, snapped near a step, away from the top
+      target = Math.round((28 + Math.random() * 52) / STEP) * STEP;
+    }
+    newTarget();
+
+    host.innerHTML = `
+      <div class="banner">
+        <div class="k">MATCH THE REFERENCE IMAGE BY</div>
+        <div class="q">rotating the <b>nut</b></div>
+      </div>
+      <div class="nc-body">
+        <div class="nc-ref" title="Reference">
+          <div class="nc-mini nc-bolt">
+            <div class="nc-head"></div>
+            <div class="nc-track"><div class="nc-shaft"></div><div class="nc-nut ref"></div></div>
+          </div>
+        </div>
+        <div class="nc-stage">
+          <div class="nc-bolt">
+            <div class="nc-head"></div>
+            <div class="nc-track"><div class="nc-shaft"></div><div class="nc-nut live"></div></div>
+          </div>
+        </div>
+        <div class="nc-controls">
+          <div class="nc-arrow" data-d="-1" title="Turn left (up)">&larr;</div>
+          <div class="nc-arrow" data-d="1" title="Turn right (down)">&rarr;</div>
+        </div>
+      </div>
+      <div class="cap-msg"></div>
+      <div class="nc-foot">
+        <div class="nc-refresh" title="New reference">&#x21BB;</div>
+        <div class="btn primary verify">Verify</div>
+      </div>
+      <div class="cap-counter"></div>`;
+    wireCounter(host);
+
+    const liveNut = host.querySelector(".nc-nut.live");
+    const refNut  = host.querySelector(".nc-nut.ref");
+    const paint = () => {
+      liveNut.style.setProperty("--pos", pos.toFixed(2));
+      refNut.style.setProperty("--pos", target.toFixed(2));
+    };
+    paint();
+
+    function turn(dir) {
+      pos = Math.max(0, Math.min(100, pos + dir * STEP));
+      liveNut.classList.remove("turn"); void liveNut.offsetWidth; liveNut.classList.add("turn");
+      Sound && Sound.tick();
+      setMsg(host, "");
+      paint();
+    }
+
+    host.querySelectorAll(".nc-arrow").forEach((a) =>
+      (a.onclick = () => turn(parseInt(a.dataset.d, 10))));
+
+    function onKey(e) {
+      if (e.key === "ArrowLeft")  { e.preventDefault(); turn(-1); }
+      if (e.key === "ArrowRight") { e.preventDefault(); turn(1); }
+    }
+    document.addEventListener("keydown", onKey, true);
+    const watch = setInterval(() => {
+      if (!host.isConnected) { document.removeEventListener("keydown", onKey, true); clearInterval(watch); }
+    }, 400);
+
+    host.querySelector(".nc-refresh").onclick = () => {
+      newTarget(); pos = 0; paint();
+      setMsg(host, "New reference. Match it.", "");
+      Sound && Sound.click();
+    };
+
+    host.querySelector(".verify").onclick = () => {
+      if (Math.abs(pos - target) <= TOL) {
+        setMsg(host, "Torqued to spec. You may pass.", "good");
+        Sound && Sound.good();
+        liveNut.classList.add("locked");
+        document.removeEventListener("keydown", onKey, true);
+        setTimeout(api.solve, 450);
+      } else {
+        const dir = pos < target ? "down (→)" : "up (←)";
+        setMsg(host, "Not aligned. Turn the nut " + dir + " to match.", "bad");
+        Sound && Sound.error(); api.fail && api.fail();
+      }
+    };
+  };
+
   /* ============ TYPE: absurd multi-stage TEXT captcha ============
      Driven by a `spec` produced by makeLoginSpecs(). Input-only:
      one prompt, optional distorted glyph, a text field + Verify.   */
@@ -564,8 +658,8 @@
   function pickType(n) {
     if (n <= 0) return "checkbox";
     const bag = ["grid", "grid", "traffic"];
-    if (n >= 2) bag.push("mechanical");           // the new two-bolt micro-game
-    if (n >= 3) bag.push("traffic", "mechanical");
+    if (n >= 2) bag.push("mechanical", "nut");    // the mechanical micro-games
+    if (n >= 3) bag.push("traffic", "nut");
     return pick(bag);
   }
 

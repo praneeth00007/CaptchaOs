@@ -89,6 +89,7 @@
   const APPS = [
     { id: "browser", icon: "🌐", label: "Cozle Browser", open: () => Browser.open() },
     { id: "snake",   icon: "🐍", label: "Snake",         open: () => Snake.open() },
+    { id: "mixer",   icon: "🎚️", label: "Ambient Mixer",  open: () => Mixer.open() },
     { id: "notes",   icon: "📝", label: "Notepad",       open: openNotepad },
     { id: "trials",  icon: "🧩", label: "CAPTCHA Trials",open: () => Gauntlet.run({}) },
     { id: "control", icon: "🎛️", label: "Control Panel",  open: openControlPanel, dialog: true },
@@ -324,7 +325,7 @@
      ?cap=traffic|pattern|grid|checkbox|text|mechanical
      ?q=something     -> desktop + browser already searching "something"     */
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const CAP_TYPES = ["checkbox", "grid", "traffic", "mechanical", "pattern", "text"];
+  const CAP_TYPES = ["checkbox", "grid", "traffic", "mechanical", "nut", "pattern", "text"];
 
   function getParams() {
     const out = {};
@@ -342,8 +343,8 @@
   function capTypeFor(v) {
     v = String(v).toLowerCase();
     if (v === "2" || v === "bolt") return "mechanical";
-    if (v === "1" || v === "any" || v === "") return pick(["grid", "traffic", "mechanical", "pattern", "checkbox"]);
-    return CAP_TYPES.indexOf(v) >= 0 ? v : pick(["grid", "traffic", "mechanical", "pattern"]);
+    if (v === "1" || v === "any" || v === "") return pick(["grid", "traffic", "mechanical", "nut", "pattern", "checkbox"]);
+    return CAP_TYPES.indexOf(v) >= 0 ? v : pick(["grid", "traffic", "mechanical", "nut", "pattern"]);
   }
 
   function toDesktop() {
@@ -378,7 +379,7 @@
     try {
       console.log("%cCaptchaOS test routes:", "font-weight:bold;color:#6a5bc4",
         "\n  ?go=login   ?go=desktop" +
-        "\n  ?cap=1 (random)  ?cap=2 (bolt)  ?cap=traffic|pattern|grid|checkbox|text|mechanical" +
+        "\n  ?cap=1 (random)  ?cap=2 (bolt)  ?cap=traffic|pattern|grid|checkbox|text|mechanical|nut" +
         "\n  ?q=term    (open browser + search)" +
         "\n  ?snake=2   (start Snake at level N: 2=glitch storm, 3=near finale)" +
         "\n  ?finale=1  (jump straight to the rickroll finale)" +

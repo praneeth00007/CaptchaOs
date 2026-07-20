@@ -560,6 +560,108 @@ body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 .mbolt .mtag { font-family:var(--font-pixel); font-size:8px; color:#8f96a5; }
 .mbolt.done .mtag { color:#4f9c5a; }
 
+/* ============ nut-rotation captcha — match the reference bolt ============ */
+.nutcap { width:272px; }
+.nc-body { position:relative; background:#e6e8ee; padding:12px; }
+.nc-ref {
+  position:absolute; top:12px; left:12px; width:58px; height:66px; z-index:2;
+  background:#f4f5f8; border:2px solid #b8bcc6;
+  box-shadow: inset 1px 1px 0 #fff, inset -2px -2px 0 #c8ccd4;
+  display:grid; place-items:center; overflow:hidden;
+}
+.nc-stage { display:grid; place-items:center; min-height:212px; }
+
+/* the bolt: hex head + threaded shaft + travelling hex nut */
+.nc-bolt { display:flex; flex-direction:column; align-items:center; }
+.nc-head {
+  width:50px; height:28px; z-index:1;
+  background: linear-gradient(180deg,#d8dbe2,#a4aab6 65%,#7f8593);
+  border:2px solid #565b67;
+  clip-path: polygon(14% 0,86% 0,100% 50%,86% 100%,14% 100%,0 50%);
+}
+.nc-track { position:relative; width:44px; height:150px; margin-top:-2px; }
+.nc-shaft {
+  position:absolute; left:50%; top:0; bottom:0; width:22px; transform:translateX(-50%);
+  background:
+    repeating-linear-gradient(-24deg, rgba(255,255,255,.55) 0 2px, transparent 2px 6px),
+    linear-gradient(90deg,#868c9a,#c6cad2 45%,#868c9a);
+  border:2px solid #565b67; border-top:none; border-radius:0 0 4px 4px;
+}
+.nc-nut {
+  position:absolute; left:50%; width:52px; height:26px; z-index:2;
+  top: calc((100% - 26px) * var(--pos,0) / 100);
+  transform: translateX(-50%);
+  background: linear-gradient(180deg,#e3e6ec,#a9aeba 58%,#868c99);
+  border:2px solid #4c515c;
+  clip-path: polygon(0 50%,16% 0,84% 0,100% 50%,84% 100%,16% 100%);
+}
+.nc-nut::before {                    /* the shaft passing through the bore */
+  content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:58%; height:36%; border-radius:2px;
+  background: linear-gradient(#5f646f,#868c99);
+}
+.nc-nut.turn { animation: nutturn .18s ease; }         /* a quick 'turning' flip */
+@keyframes nutturn { 50% { transform: translateX(-50%) scaleX(.55); } }
+.nc-nut.locked { border-color:#3a8a4a; }
+.nc-nut.locked::before { background:#3a8a4a; }
+
+/* the small reference bolt, scaled down inside its window */
+.nc-mini { transform: scale(.36); transform-origin:center; }
+
+/* arrow controls */
+.nc-controls { display:flex; gap:14px; justify-content:center; margin-top:8px; }
+.nc-arrow {
+  width:40px; height:30px; display:grid; place-items:center; cursor:pointer;
+  font-size:18px; color:var(--ink);
+  background:#eceef3; border:2px solid #b8bcc6;
+  box-shadow: inset 1px 1px 0 #fff, inset -2px -2px 0 #c8ccd4;
+}
+.nc-arrow:active { box-shadow: inset 2px 2px 0 #c8ccd4; }
+
+.nc-foot { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#fff; }
+.nc-refresh {
+  width:30px; height:30px; display:grid; place-items:center; cursor:pointer;
+  font-size:17px; color:#2f5fb0; background:#eceef3; border:2px solid #b8bcc6;
+}
+.nutcap .cap-msg { padding:4px 12px; min-height:22px; }
+
+/* ============ Cozy Ambient Mixer (mixer.exe) ============ */
+.mx { background:var(--chrome); padding:12px 14px 14px; }
+.mx-head { font-family:var(--font-pixel); font-size:11px; color:var(--title); letter-spacing:.5px; }
+.mx-sub { font-size:16px; color:var(--ink-soft); margin:4px 0 12px; line-height:1.2; }
+.mx-row {
+  display:flex; align-items:center; gap:8px; padding:8px 0;
+  border-bottom:1px dotted var(--chrome-dark);
+}
+.mx-ico { width:22px; text-align:center; font-size:18px; }
+.mx-name { width:104px; font-size:16px; color:var(--ink); }
+.mx-row.muted .mx-ico, .mx-row.muted .mx-name { opacity:.45; }
+
+/* Win98 fader */
+.mx-slider { -webkit-appearance:none; appearance:none; flex:1; height:18px; background:transparent; cursor:pointer; }
+.mx-slider::-webkit-slider-runnable-track {
+  height:8px; background:#fff; border:2px solid var(--chrome-darker);
+  box-shadow: inset 1px 1px 0 var(--chrome-dark);
+}
+.mx-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:12px; height:18px; margin-top:-7px;
+  background: var(--chrome); border:2px solid var(--chrome-darker);
+  box-shadow: inset 1px 1px 0 var(--chrome-light), inset -1px -1px 0 var(--chrome-dark);
+}
+.mx-slider::-moz-range-track { height:8px; background:#fff; border:2px solid var(--chrome-darker); }
+.mx-slider::-moz-range-thumb {
+  width:12px; height:18px; border-radius:0; background:var(--chrome); border:2px solid var(--chrome-darker);
+}
+.mx-slider:disabled { opacity:.5; cursor:not-allowed; }
+
+.mx-btn {
+  width:30px; height:24px; display:grid; place-items:center; cursor:pointer; font-size:13px;
+  background:var(--chrome); border:2px solid var(--chrome-darker);
+  box-shadow: inset 1px 1px 0 var(--chrome-light), inset -1px -1px 0 var(--chrome-dark);
+}
+.mx-btn:active { box-shadow: inset 1px 1px 0 var(--chrome-dark); }
+.mx-foot { font-size:14px; color:var(--ink-soft); margin-top:12px; text-align:center; line-height:1.3; }
+
 /* traffic-light captcha — cozy 2D pixel scene + selection grid */
 .tl-scene-wrap { padding:3px; background:#2f5fb0; }
 .tl-scene {
