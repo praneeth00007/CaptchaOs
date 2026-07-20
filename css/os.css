@@ -1498,3 +1498,49 @@ body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 .sp-vibe-in { width: 150px; text-align: center; }
 .sp-vibe-msg { min-height: 24px; font-size: 16px; text-align: center; padding: 0 12px 12px; }
 .sp-vibe-msg.ok { color: var(--ok); } .sp-vibe-msg.bad { color: var(--error); }
+
+/* ============================================================
+   brew.exe — café terminal
+   ============================================================ */
+.brewwin .body { padding: 0; background: #0d120e; display: flex; flex-direction: column; }
+.brew {
+  position: relative; display: flex; flex-direction: column; height: 100%;
+  background: #0d120e; color: #9ff0c4; font-family: var(--font-body); font-size: 17px;
+}
+.brew-out {
+  flex: 1; overflow-y: auto; padding: 8px 10px; line-height: 1.28;
+  white-space: pre-wrap; word-break: break-word;
+}
+.brew-ln { min-height: 1.28em; }
+.brew-ln.dim { color: #5f8f74; }
+.brew-ln.echo { color: #cfeede; }
+.brew-ln.err { color: #ff8a8a; }
+.brew-ln.ok { color: #a9f0b8; }
+.brew-ln.hd { color: #ffe08a; }
+.brew-ln.art { color: #7fd7c8; font-family: var(--font-pixel); font-size: 11px; line-height: 1.5; }
+.brew-line {
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+  border-top: 2px solid #1c2a20; background: #0a0f0b;
+}
+.brew-prompt { color: #4fd0a0; font-family: var(--font-pixel); font-size: 11px; flex: 0 0 auto; }
+.brew-in {
+  flex: 1; background: transparent; border: 0; outline: 0;
+  color: #d6ffe6; font-family: var(--font-body); font-size: 17px; caret-color: #4fd0a0;
+}
+.brew-in:disabled { opacity: .5; }
+
+.brew-sudo {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(6,9,7,.9); display: grid; place-items: center; padding: 10px;
+}
+.brew-sudo[hidden] { display: none; }
+.brew-sudo-inner { width: 340px; max-width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.brew-sudo-bar {
+  background: #20242e; color: #ff8a8a; font-family: var(--font-pixel); font-size: 10px;
+  padding: 8px 10px; letter-spacing: 1px;
+}
+.brew-sudo-x {
+  align-self: flex-end; font-family: var(--font-pixel); font-size: 9px; color: #9fb0c0;
+  cursor: pointer; padding: 3px 6px; border: 1px solid #3a4450;
+}
+.brew-sudo-x:hover { color: #fff; background: #3a4450; }
