@@ -90,6 +90,7 @@
     { id: "browser", icon: "🌐", label: "Cozle Browser", open: () => Browser.open() },
     { id: "snake",   icon: "🐍", label: "Snake",         open: () => Snake.open() },
     { id: "mixer",   icon: "🎚️", label: "Ambient Mixer",  open: () => Mixer.open() },
+    { id: "spudpet", icon: "🥔", label: "Spud-Pet",      open: () => SpudPet.open(), dialog: true },
     { id: "notes",   icon: "📝", label: "Notepad",       open: openNotepad },
     { id: "trials",  icon: "🧩", label: "CAPTCHA Trials",open: () => Gauntlet.run({}) },
     { id: "control", icon: "🎛️", label: "Control Panel",  open: openControlPanel, dialog: true },
@@ -359,12 +360,13 @@
     if (p.go === "login" || "login" in p) { showLogin(); return true; }
     if (p.go === "desktop" || cap != null || p.q != null ||
         p.snake != null || "finale" in p || "desktop" in p ||
-        "audiocheck" in p || "idle" in p || "spud" in p) {
+        "audiocheck" in p || "idle" in p || "spud" in p || "spudpet" in p) {
       toDesktop();
       if (cap != null) setTimeout(() => Gauntlet.popup({ type: capTypeFor(cap) }), 150);
       if (p.q != null) setTimeout(() => Browser.open({ q: p.q }), cap != null ? 400 : 150);
       if (p.snake != null) setTimeout(() => Snake.open({ level: parseInt(p.snake, 10) || 1 }), 150);
       if ("finale" in p) setTimeout(() => Finale.play(), 150);
+      if ("spudpet" in p) setTimeout(() => SpudPet.open(), 150);
       return true;
     }
     return false;
