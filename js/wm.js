@@ -87,6 +87,8 @@
       const win = document.createElement("div");
       win.className = "win bevel-out " + (opts.className || "");
       win.dataset.id = id;
+      if (opts.system) win.dataset.system = "1";
+      if (opts.noFog) win.dataset.nofog = "1";
       win.style.width = (opts.width || 360) + "px";
       if (opts.height) win.style.height = opts.height + "px";
 
