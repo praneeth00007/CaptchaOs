@@ -176,6 +176,28 @@
     // soft metronome tick for the rhythm task
     beat() { tone(300, 0.06, "triangle", 0, 0.09); },
 
+    // a muffled cough — Spud, hacking over the numbers he doesn't want you to hear
+    cough() {
+      if (muted) return;
+      const c = ac(); const t0 = c.currentTime;
+      const burst = (off, dur, peak, cut) => {
+        const n = Math.floor(c.sampleRate * dur);
+        const buf = c.createBuffer(1, n, c.sampleRate); const d = buf.getChannelData(0);
+        for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+        const s = c.createBufferSource(); s.buffer = buf;
+        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = cut;
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.0001, t0 + off);
+        g.gain.linearRampToValueAtTime(peak, t0 + off + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + off + dur);
+        s.connect(lp).connect(g).connect(c.destination);
+        s.start(t0 + off); s.stop(t0 + off + dur + 0.02);
+      };
+      burst(0, 0.13, 0.4, 1100);
+      burst(0.16, 0.19, 0.34, 800);
+      tone(140, 0.2, "sawtooth", 0.02, 0.1);
+    },
+
     // short retro speech blip — pitch varies per char for that "animalese" feel
     blip(freq) { tone(freq || 460, 0.028, "square", 0, 0.045); },
 

@@ -73,7 +73,19 @@
               "Game over. I never trusted that snake either.",
               "You lost. The report says you hesitated.",
               "That's alright — reflexes aren't your thing. I'm a potato; I get it.",
-              "Score noted. Filed under 'tried their best.'"]
+              "Score noted. Filed under 'tried their best.'"],
+    rainy:   ["Great. Now my coffee's basically rain.",
+              "Umbrella's up. You watered down my coffee, you know.",
+              "This is a beverage, not a rain gauge. Ease off the storm.",
+              "Cozy is one thing. Soggy is another."],
+    spy:     ["Nobody wipes glass in a perfect line. Nobody human.",
+              "Straight edges. Right angles. I've filed a report.",
+              "Robotically precise. I knew it. I KNEW it.",
+              "That wasn't a wipe. That was a blueprint."],
+    seized:  ["That's three. I'm driving now.",
+              "Board's mine. All faders to zero. You're welcome.",
+              "You had your chance with the numbers.",
+              "Consider it confiscated."]
   };
 
   /* ---- tuning ---- */
@@ -129,6 +141,18 @@
     window.addEventListener("snake:over", () => {          // lost a round of Snake
       bump(5);
       speak(pick(CTX.snake), { minGap: 2500, prob: 1 });
+    });
+    window.addEventListener("moisture:high", () => {       // the mixer's making it rain
+      spud.classList.add("rainy");                         // out comes the tiny umbrella
+      speak(pick(CTX.rainy), { minGap: 0, prob: 1 });
+    });
+    window.addEventListener("moisture:ok", () => { spud.classList.remove("rainy"); });
+    window.addEventListener("spy:accused", () => {         // robotic wipe caught on the fog
+      bump(20);
+      speak(pick(CTX.spy), { minGap: 0, prob: 1 });
+    });
+    window.addEventListener("mixer:reset", () => {         // he just seized the board
+      speak(pick(CTX.seized), { minGap: 0, prob: 1 });
     });
 
     setInterval(poll, 1000);
