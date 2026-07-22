@@ -93,6 +93,7 @@
     { id: "mixer",   icon: "🎚️", label: "Ambient Mixer",  open: () => Mixer.open() },
     { id: "spudpet", icon: "🥔", label: "Spud-Pet",      open: () => SpudPet.open(), dialog: true },
     { id: "brew",    icon: "☕", label: "brew.exe",       open: () => Brew.open() },
+    { id: "destiny", icon: "🔮", label: "destiny.exe",    open: () => Destiny.open() },
     { id: "notes",   icon: "📝", label: "Notepad",       open: openNotepad },
     { id: "trials",  icon: "🧩", label: "CAPTCHA Trials",open: () => Gauntlet.run({}) },
     { id: "control", icon: "🎛️", label: "Control Panel",  open: openControlPanel, dialog: true },
@@ -138,7 +139,10 @@
         r(5,9,6,5,"#b8ae97")+r(6,10,4,3,"#7fd7c8")),
       bin: wrap(
         r(4,3,8,1,"#8c8674")+r(6,2,4,1,"#8c8674")+r(3,4,10,2,"#b8ae97")+r(4,6,8,8,"#9a938a")+
-        r(6,7,1,6,"#6f6a5c")+r(9,7,1,6,"#6f6a5c"))
+        r(6,7,1,6,"#6f6a5c")+r(9,7,1,6,"#6f6a5c")),
+      destiny: wrap(
+        r(5,2,6,2,"#6a5bc4")+r(4,4,8,7,"#a9c8ff")+r(5,5,6,5,"#e6f0ff")+r(6,6,2,2,"#fff")+
+        r(4,11,8,2,"#3a2e7a")+r(7,1,2,1,"#ffe08a")+r(2,5,1,1,"#ffe08a")+r(13,7,1,1,"#ffe08a"))
     };
   })();
   function iconFor(app) { return ICONS[app.id] || ('<span class="ql-emoji">' + app.icon + '</span>'); }
@@ -419,7 +423,7 @@
     if (p.go === "desktop" || cap != null || p.q != null ||
         p.snake != null || "finale" in p || "desktop" in p ||
         "audiocheck" in p || "idle" in p || "spud" in p || "spudpet" in p ||
-        "brew" in p || "radio" in p) {
+        "brew" in p || "radio" in p || "destiny" in p) {
       toDesktop();
       if (cap != null) setTimeout(() => Gauntlet.popup({ type: capTypeFor(cap) }), 150);
       if (p.q != null) setTimeout(() => Browser.open({ q: p.q }), cap != null ? 400 : 150);
@@ -428,6 +432,7 @@
       if ("spudpet" in p) setTimeout(() => SpudPet.open(), 150);
       if ("brew" in p) setTimeout(() => Brew.open(), 150);
       if ("radio" in p) setTimeout(() => Radio.open(), 150);
+      if ("destiny" in p) setTimeout(() => Destiny.open(), 150);
       return true;
     }
     return false;

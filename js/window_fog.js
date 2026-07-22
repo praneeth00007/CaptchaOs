@@ -280,20 +280,25 @@
   function frame(st, ts) {
     st.raf = null;
     const now = ts || performance.now();
-    if (now - st.lastSample > SAMPLE_MS) {
-      st.lastSample = now;
-      st.coverage = sampleCoverage(st);
-      applyCoverage(st);
-      maybeTriggerChallenge(st);
-    }
-    // a faint drifting shimmer keeps the glass feeling alive — cheap, few rects
-    if (st.coverage > 0 && !st.locked) {
-      const g = st.g, w = st.canvas.width, h = st.canvas.height;
-      const t = now * 0.0009;
-      g.globalCompositeOperation = "source-over";
-      g.fillStyle = "rgba(255,255,255,0.015)";
-      g.fillRect((Math.sin(t) * 0.5 + 0.5) * w * 0.6, (Math.cos(t * 0.7) * 0.5 + 0.5) * h * 0.6,
-        w * 0.35, h * 0.35);
+    // a minimized/backgrounded window does no sampling or shimmer work — but
+    // the loop is kept alive (while there's still fog) so it resumes on show
+    const visible = !document.hidden && st.body.offsetParent !== null;
+    if (visible) {
+      if (now - st.lastSample > SAMPLE_MS) {
+        st.lastSample = now;
+        st.coverage = sampleCoverage(st);
+        applyCoverage(st);
+        maybeTriggerChallenge(st);
+      }
+      // a faint drifting shimmer keeps the glass feeling alive — cheap, few rects
+      if (st.coverage > 0 && !st.locked) {
+        const g = st.g, w = st.canvas.width, h = st.canvas.height;
+        const t = now * 0.0009;
+        g.globalCompositeOperation = "source-over";
+        g.fillStyle = "rgba(255,255,255,0.015)";
+        g.fillRect((Math.sin(t) * 0.5 + 0.5) * w * 0.6, (Math.cos(t * 0.7) * 0.5 + 0.5) * h * 0.6,
+          w * 0.35, h * 0.35);
+      }
     }
     if (st.coverage > 0 || st.wiping) {
       st.raf = requestAnimationFrame((ts2) => frame(st, ts2));

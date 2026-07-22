@@ -445,8 +445,11 @@
   const EYEW = "#fffdf5", PUP = "#2b2620", MOUTH = "#6b3f2a", CHEEK = "#df8a86";
 
   function animate() {
-    frame++;
-    draw();
+    // don't burn frames while the tab is backgrounded; resume on return
+    if (!document.hidden) {
+      frame++;
+      draw();
+    }
     rafId = requestAnimationFrame(animate);
   }
 
