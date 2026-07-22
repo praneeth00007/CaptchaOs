@@ -88,6 +88,7 @@
      dialog:true apps just pop a message box, so they don't count as windows. */
   const APPS = [
     { id: "browser", icon: "🌐", label: "Cozle Browser", open: () => Browser.open() },
+    { id: "radio",   icon: "📻", label: "radio.exe",      open: () => Radio.open() },
     { id: "snake",   icon: "🐍", label: "Snake",         open: () => Snake.open() },
     { id: "mixer",   icon: "🎚️", label: "Ambient Mixer",  open: () => Mixer.open() },
     { id: "spudpet", icon: "🥔", label: "Spud-Pet",      open: () => SpudPet.open(), dialog: true },
@@ -95,8 +96,52 @@
     { id: "notes",   icon: "📝", label: "Notepad",       open: openNotepad },
     { id: "trials",  icon: "🧩", label: "CAPTCHA Trials",open: () => Gauntlet.run({}) },
     { id: "control", icon: "🎛️", label: "Control Panel",  open: openControlPanel, dialog: true },
-    { id: "bin",     icon: "🗑️", label: "Recycle Bin",   open: openRecycleBin, dialog: true }
+    { id: "bin",     icon: "🗑️", label: "Recycle Bin",   open: () => RecycleBin.open() }
   ];
+
+  /* ---------------- pixel-art taskbar icons ----------------
+     Hand-built 16×16 SVGs (crispEdges => chunky pixels), one per app,
+     so the taskbar reads as cozy retro glyphs instead of flat emoji.
+     Transparent backgrounds; the dock shows a lit dot under running apps. */
+  const ICONS = (function () {
+    const wrap = (inner) =>
+      '<svg viewBox="0 0 16 16" width="16" height="16" shape-rendering="crispEdges" ' +
+      'xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+    const r = (x, y, w, h, c) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + c + '"/>';
+    return {
+      browser: wrap(
+        r(2,2,12,12,"#2f6f8f")+r(3,3,10,10,"#7fd7c8")+r(7,3,2,10,"#2f6f8f")+
+        r(3,7,10,2,"#2f6f8f")+r(4,4,3,2,"#cdeee8")+r(3,3,10,1,"#a9ece0")),
+      radio: wrap(
+        r(1,5,14,9,"#8c5a3a")+r(2,6,12,7,"#c8905c")+r(3,7,6,5,"#3a2313")+r(4,8,4,3,"#7fd7c8")+
+        r(10,7,3,3,"#ffe08a")+r(10,10,3,1,"#3a2313")+r(4,2,2,4,"#b8ae97")+r(9,3,1,3,"#b8ae97")),
+      snake: wrap(
+        r(3,3,8,2,"#4caf50")+r(9,3,2,6,"#4caf50")+r(5,7,6,2,"#4caf50")+r(5,7,2,5,"#4caf50")+
+        r(5,10,7,2,"#66d16a")+r(3,3,2,2,"#2e7d32")+r(12,4,1,1,"#d9536a")),
+      mixer: wrap(
+        r(3,2,1,12,"#8c8674")+r(8,2,1,12,"#8c8674")+r(13,2,1,12,"#8c8674")+
+        r(2,4,3,2,"#7fd7c8")+r(7,8,3,2,"#ffe08a")+r(12,3,3,2,"#e2687d")),
+      spudpet: wrap(
+        r(5,2,6,2,"#e2b878")+r(3,4,10,8,"#c9954f")+r(4,12,8,2,"#a2712f")+
+        r(5,6,2,2,"#2b2620")+r(9,6,2,2,"#2b2620")+r(6,9,4,1,"#6b3f2a")+r(4,5,1,4,"#a2712f")),
+      brew: wrap(
+        r(3,6,9,7,"#eae3d2")+r(4,7,7,5,"#3a2313")+r(12,7,3,3,"#eae3d2")+r(13,8,1,1,"#8c8674")+
+        r(5,2,1,3,"#cdeee8")+r(8,2,1,3,"#cdeee8")+r(3,12,9,1,"#b8ae97")),
+      notes: wrap(
+        r(3,2,10,12,"#fffdf5")+r(3,2,10,2,"#d9536a")+r(5,6,6,1,"#5c5548")+
+        r(5,8,6,1,"#5c5548")+r(5,10,4,1,"#5c5548")+r(3,2,1,12,"#b8ae97")),
+      trials: wrap(
+        r(4,2,6,4,"#6a5bc4")+r(6,4,2,2,"#6a5bc4")+r(2,6,4,6,"#7fd7c8")+r(4,8,2,2,"#7fd7c8")+
+        r(8,6,6,6,"#ffe08a")+r(10,4,2,2,"#ffe08a")),
+      control: wrap(
+        r(2,3,5,5,"#b8ae97")+r(3,4,3,3,"#3a2e7a")+r(9,3,5,5,"#b8ae97")+r(10,4,3,3,"#d9536a")+
+        r(5,9,6,5,"#b8ae97")+r(6,10,4,3,"#7fd7c8")),
+      bin: wrap(
+        r(4,3,8,1,"#8c8674")+r(6,2,4,1,"#8c8674")+r(3,4,10,2,"#b8ae97")+r(4,6,8,8,"#9a938a")+
+        r(6,7,1,6,"#6f6a5c")+r(9,7,1,6,"#6f6a5c"))
+    };
+  })();
+  function iconFor(app) { return ICONS[app.id] || ('<span class="ql-emoji">' + app.icon + '</span>'); }
 
   /* CaptchaOS runs a strict three-window policy. Try to open a fourth and
      it panics at you in cascading error boxes, snake-storm style. */
@@ -116,7 +161,9 @@
       WM.errorStorm(WINDOW_LIMIT_ERRORS, 320);
       return;
     }
+    WM._launchAppId = app.id;              // the app's first window inherits this
     try { app.open(); } catch (e) {}
+    WM._launchAppId = null;
   }
 
   function enterDesktop() {
@@ -162,21 +209,38 @@
     const mute = $("#mute");
     const quick = $("#quicklaunch");
 
-    // Quick Launch: one icon-button per app, right on the taskbar. Hover shows
-    // the name (native title tooltip). Single click launches — this is where
-    // apps live now, so the desktop stays clear and new apps just slot in.
+    // Quick Launch: one pixel-icon per app, docked on the taskbar. Transparent
+    // (no chrome box), name on hover (native tooltip), and an Ubuntu-style lit
+    // dot under any app that currently has a window open. This is where apps
+    // live now, so the desktop stays clear and new apps just slot in.
     if (quick) {
       quick.innerHTML = "";
       APPS.forEach((app) => {
         const q = document.createElement("div");
         q.className = "qlicon";
+        q.dataset.app = app.id;
         q.title = app.label;                       // hover tooltip
         q.setAttribute("role", "button");
         q.setAttribute("aria-label", app.label);
-        q.textContent = app.icon;
-        q.onclick = () => { try { Sound && Sound.click(); } catch (e) {} launch(app); };
+        q.innerHTML = '<span class="ql-glyph">' + iconFor(app) + '</span>' +
+                      '<span class="ql-dot"></span>' +
+                      '<span class="ql-tip">' + app.label + '</span>';
+        q.onclick = () => {
+          try { Sound && Sound.click(); } catch (e) {}
+          q.classList.add("bounce");
+          setTimeout(() => q.classList.remove("bounce"), 320);
+          launch(app);
+        };
         quick.appendChild(q);
       });
+      // reflect running apps whenever the window set changes
+      const paintRunning = () => {
+        let running; try { running = WM.runningAppIds(); } catch (e) { running = new Set(); }
+        quick.querySelectorAll(".qlicon").forEach((el) =>
+          el.classList.toggle("running", running.has(el.dataset.app)));
+      };
+      window.addEventListener("wm:changed", paintRunning);
+      paintRunning();
     }
 
     // build start menu from APPS + a separator + a "log off"
@@ -311,15 +375,6 @@
     });
   }
 
-  function openRecycleBin() {
-    WM.error({
-      title: "Recycle Bin",
-      tico: "🗑️", icon: "🗑️",
-      msg: "Recycle Bin is empty. Except for your patience, which we appear to have deleted.",
-      buttons: [{ label: "OK", primary: true }],
-      sound: false
-    });
-  }
 
   /* ---------------- debug routing (query-string deep links) ----------------
      ?go=login        -> jump to the login gauntlet
@@ -363,7 +418,8 @@
     if (p.go === "login" || "login" in p) { showLogin(); return true; }
     if (p.go === "desktop" || cap != null || p.q != null ||
         p.snake != null || "finale" in p || "desktop" in p ||
-        "audiocheck" in p || "idle" in p || "spud" in p || "spudpet" in p || "brew" in p) {
+        "audiocheck" in p || "idle" in p || "spud" in p || "spudpet" in p ||
+        "brew" in p || "radio" in p) {
       toDesktop();
       if (cap != null) setTimeout(() => Gauntlet.popup({ type: capTypeFor(cap) }), 150);
       if (p.q != null) setTimeout(() => Browser.open({ q: p.q }), cap != null ? 400 : 150);
@@ -371,6 +427,7 @@
       if ("finale" in p) setTimeout(() => Finale.play(), 150);
       if ("spudpet" in p) setTimeout(() => SpudPet.open(), 150);
       if ("brew" in p) setTimeout(() => Brew.open(), 150);
+      if ("radio" in p) setTimeout(() => Radio.open(), 150);
       return true;
     }
     return false;

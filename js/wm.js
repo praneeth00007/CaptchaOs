@@ -16,8 +16,13 @@
     syncTasks();
   }
 
+  function changed() {
+    try { global.dispatchEvent(new CustomEvent("wm:changed")); } catch (e) {}
+  }
+
   function syncTasks() {
     const bar = tasksEl();
+    changed();
     if (!bar) return;
     bar.innerHTML = "";
     for (const [id, w] of wins) {
@@ -87,6 +92,11 @@
       const win = document.createElement("div");
       win.className = "win bevel-out " + (opts.className || "");
       win.dataset.id = id;
+      // the launcher stamps the app id just before calling app.open(); the
+      // app's first window inherits it, so the taskbar can show which apps run
+      const appId = opts.appId || WM._launchAppId || null;
+      WM._launchAppId = null;
+      if (appId) win.dataset.app = appId;
       if (opts.system) win.dataset.system = "1";
       if (opts.noFog) win.dataset.nofog = "1";
       win.style.width = (opts.width || 360) + "px";
@@ -118,7 +128,7 @@
         else body.appendChild(opts.content);
       }
 
-      const meta = { title: opts.title || "Window", icon: opts.icon, noTask: opts.noTask, system: !!opts.system };
+      const meta = { title: opts.title || "Window", icon: opts.icon, noTask: opts.noTask, system: !!opts.system, appId: appId };
       const record = { el: win, meta };
       wins.set(id, record);
 
@@ -126,7 +136,7 @@
         el: win, body, id,
         close() {
           if (opts.onClose) try { opts.onClose(); } catch (e) {}
-          win.remove(); wins.delete(id); syncTasks();
+          win.remove(); wins.delete(id); syncTasks(); changed();
           if (global.Sound) Sound.close();
         },
         setTitle(t) { meta.title = t; win.querySelector(".ttl").textContent = t; syncTasks(); },
@@ -226,6 +236,9 @@
     count() { return wins.size; },
     // count only real app windows — captcha/gate windows pass {system:true}
     appCount() { let n = 0; for (const [, w] of wins) if (!w.meta.system) n++; return n; },
+    // which app ids currently have at least one open window (for taskbar dots)
+    runningAppIds() { const s = new Set(); for (const [, w] of wins) if (w.meta.appId) s.add(w.meta.appId); return s; },
+    _launchAppId: null,
     focusEl: focus,
     syncTasks
   };
